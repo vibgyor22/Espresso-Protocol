@@ -1,0 +1,42 @@
+Build a minimalist, pre-launch landing page for a platform called Espresso Protocol.
+
+The site should feel calm, serious, and principled. The audience includes policymakers, researchers, institutional investors, analysts, and decision makers. The tone must be honest and precise. Do not claim the product is live or widely used. Present it as a platform under development with a clear mission and design philosophy. Use a restrained espresso-inspired visual theme with coffee brown, off-white, and muted neutral tones. Typography should be elegant and readable. No animations or gimmicks.
+
+Include the following content and structure:
+
+Landing Introduction (Hero Section)
+Headline: A standard for explainable, accountable data-driven decisions
+Subheadline: Espresso Protocol is a platform being built to help people turn raw data into structured, explainable inference they can question, verify, and trust.
+Supporting line: Designed for decisions where assumptions matter, uncertainty must be visible, and results need to be defensible.
+Primary CTA: “Explore the idea”
+Secondary CTA: “How it works”
+
+Problem Statement
+Explain that important decisions in finance, policy, research, and institutions rely on data analysis that is often opaque, difficult to reproduce, and hard to interrogate. Statistical methods are applied inconsistently, assumptions remain implicit, and advanced analysis requires specialized expertise, creating a gap between analysis and decision making. Newer AI tools can produce fluent explanations without clearly showing how conclusions are derived, making accountability difficult. State that there is a need for a more structured and transparent way to reason with data.
+
+The Idea Behind Espresso Protocol
+Explain that Espresso Protocol aims to standardize how data is transformed into inference. The goal is not to automate judgment but to make analytical steps explicit, structured, and understandable. Emphasize reducing barriers to rigorous statistical reasoning, making assumptions visible, ensuring results are reproducible, and separating statistical computation from explanation.
+
+How It Works
+Use light espresso metaphors without overdoing them.
+	1.	The Grind — Raw data is structured and documented so inputs, units, and transformations are clear.
+	2.	The Extraction — Appropriate econometric or statistical methods and assumptions are selected using transparent rules based on the data and question.
+	3.	The Brew — Traceable statistical analysis is run, producing results with uncertainty, diagnostics, and sensitivity information.
+	4.	The Serve — A language interface explains what was done, why it was done, and what the results mean, allowing follow-up questions and what-if exploration. The language layer explains results but does not generate them.
+
+What Makes This Approach Distinct
+Clearly state that explanation is treated as a first-class requirement. Every result is tied to a specific dataset, explicit methods, stated assumptions, and reproducible statistical output. Language models are used only to communicate and clarify analysis, not to create it.
+
+Specific Use Cases
+Include concrete examples such as evaluating whether a policy changed outcomes over time, assessing whether changes are structural or temporary, exploring macroeconomic scenarios, and supporting replicable academic research.
+
+Types of Questions It Can Answer
+Examples include understanding what changed after an intervention, which assumptions drive conclusions, how sensitive results are to model choices, what conditions would invalidate findings, and how outcomes differ across groups or scenarios.
+
+Intended Impact
+State that by making statistical reasoning transparent and easier to interrogate, Espresso Protocol aims to support better decision making, improve accountability, and increase trust in data-driven conclusions across sectors.
+
+Design and Technical Requirements
+Minimalist layout, espresso brown and neutral palette, strong typography, modern HTML and CSS, responsive and accessible.
+
+End with a calm closing line emphasizing that Espresso Protocol is an ongoing effort to rethink how people reason with data when the stakes are high.
