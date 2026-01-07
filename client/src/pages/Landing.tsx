@@ -25,10 +25,10 @@ const AbstractAnalyticsBackground = () => {
   const { scrollYProgress } = useScroll();
   
   // Create many more columns of numbers for an abstract look
-  const columns = 24;
+  const columns = 20;
   
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 mix-blend-difference opacity-[0.07] flex justify-between px-4">
+    <div className="fixed inset-0 pointer-events-none z-0 mix-blend-difference opacity-[0.12] flex justify-between px-2">
       {Array.from({ length: columns }).map((_, i) => (
         <NumberColumn key={i} index={i} progress={scrollYProgress} />
       ))}
@@ -38,24 +38,24 @@ const AbstractAnalyticsBackground = () => {
 
 const NumberColumn = ({ index, progress }: { index: number, progress: any }) => {
   // Vary the speeds significantly for deep parallax
-  const speeds = [0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5];
+  const speeds = [0.05, 0.08, 0.12, 0.15, 0.2];
   const speed = speeds[index % speeds.length];
   const y = useTransform(progress, [0, 1], ["0%", `${-speed * 100}%`]);
   
   const numbers = useMemo(() => {
-    // Generate many more, longer numbers
-    return Array.from({ length: 150 }).map(() => 
-      Math.random().toString().slice(2, 14) + Math.random().toString().slice(2, 14)
+    // Generate separate, shorter numbers for clear columns
+    return Array.from({ length: 120 }).map(() => 
+      Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
     );
   }, []);
 
   return (
     <motion.div 
       style={{ y }} 
-      className="flex flex-col gap-2 font-mono text-[6px] text-white select-none whitespace-nowrap"
+      className="flex flex-col gap-3 font-mono text-[8px] text-white select-none pt-4"
     >
       {numbers.map((num, i) => (
-        <span key={i} className="opacity-50">{num}</span>
+        <span key={i} className="tracking-tighter opacity-40">{num}</span>
       ))}
     </motion.div>
   );
