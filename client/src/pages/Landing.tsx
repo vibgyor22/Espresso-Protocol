@@ -29,10 +29,6 @@ const NumberSpiral = () => {
   const y = useTransform(scrollYProgress, [0, 1], ["0vh", "100vh"]);
   const rotate = useTransform(scrollYProgress, [0, 1], [0, 720]);
   
-  // Mixed blend mode makes it respond to background colors
-  // But we can also use a filter or explicit color transform if preferred.
-  // Using mix-blend-difference is the most efficient way to invert based on background.
-  
   const numbers = useMemo(() => {
     return Array.from({ length: 40 }).map(() => Math.floor(Math.random() * 10000).toString().padStart(4, '0'));
   }, []);
@@ -47,7 +43,7 @@ const NumberSpiral = () => {
       className="fixed z-40 pointer-events-none mix-blend-difference flex flex-col items-center"
     >
       <div className="relative flex flex-col items-center">
-        {/* Abstract Arrow Body made of numbers */}
+        {/* Abstract flow made of numbers */}
         <div className="flex flex-wrap w-24 justify-center gap-1 opacity-80">
           {numbers.map((num, i) => (
             <span key={i} className="text-[6px] font-mono text-white leading-none">
@@ -55,8 +51,6 @@ const NumberSpiral = () => {
             </span>
           ))}
         </div>
-        {/* Arrow Head */}
-        <div className="w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-white mt-2" />
       </div>
     </motion.div>
   );
