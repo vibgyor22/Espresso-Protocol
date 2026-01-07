@@ -21,51 +21,82 @@ const ParallaxSection = ({ children, speed = 0.5, className = "", id = "" }: { c
   );
 };
 
-const NumberSpiral = () => {
+const CoffeeDragon = () => {
   const { scrollYProgress } = useScroll();
   
-  // Spiral motion across the page
-  const x = useTransform(scrollYProgress, [0, 0.25, 0.5, 0.75, 1], ["10%", "90%", "10%", "90%", "50%"]);
-  const y = useTransform(scrollYProgress, [0, 1], ["0vh", "100vh"]);
-  const rotate = useTransform(scrollYProgress, [0, 1], [0, 720]);
+  // Smooth out the scroll progress for a more organic feel
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 50, damping: 20 });
   
-  const numbers = useMemo(() => {
-    return Array.from({ length: 40 }).map(() => Math.floor(Math.random() * 10000).toString().padStart(4, '0'));
+  // Dragon body segments
+  const segments = 24;
+  
+  return (
+    <div className="fixed inset-0 pointer-events-none z-40 mix-blend-difference overflow-hidden">
+      {Array.from({ length: segments }).map((_, i) => (
+        <DragonSegment key={i} index={i} total={segments} progress={smoothProgress} />
+      ))}
+    </div>
+  );
+};
+
+const DragonSegment = ({ index, total, progress }: { index: number, total: number, progress: any }) => {
+  // Offset each segment's progress to create the "snake" trail effect
+  const offset = index * 0.015;
+  
+  // Spiral motion across the page
+  // X-position: Spirals from 5% to 95% multiple times
+  const x = useTransform(
+    progress,
+    [0, 0.25, 0.5, 0.75, 1],
+    [
+      `${10 + (index * 0.2)}%`, 
+      `${90 - (index * 0.2)}%`, 
+      `${15 + (index * 0.2)}%`, 
+      `${85 - (index * 0.2)}%`, 
+      "50%"
+    ]
+  );
+  
+  // Y-position: Flows down the page
+  const y = useTransform(progress, [0, 1], [`${-10 + (index * 2)}vh`, `${110 + (index * 2)}vh`]);
+  
+  // Scaling: Head is larger than tail
+  const scale = 1 - (index / total) * 0.6;
+  
+  // Opacity: Fades towards the tail
+  const opacity = (1 - (index / total)) * 0.8;
+
+  // Numbers logic: Head shows more defined numbers, tail is more abstract
+  const content = useMemo(() => {
+    if (index === 0) return "▼"; // Head indicator
+    return Math.floor(Math.random() * 99).toString().padStart(2, '0');
   }, []);
 
   return (
-    <motion.div 
-      style={{ 
-        left: x, 
+    <motion.div
+      style={{
+        left: x,
         top: y,
-        rotate,
+        scale,
+        opacity,
       }}
-      className="fixed z-40 pointer-events-none mix-blend-difference flex flex-col items-center"
+      className="absolute flex items-center justify-center pointer-events-none"
     >
-      <div className="relative flex flex-col items-center">
-        {/* Abstract flow made of numbers */}
-        <div className="flex flex-wrap w-24 justify-center gap-1 opacity-80">
-          {numbers.map((num, i) => (
-            <span key={i} className="text-[6px] font-mono text-white leading-none">
-              {num}
-            </span>
-          ))}
-        </div>
-      </div>
+      <span className={`font-mono text-white leading-none select-none ${index === 0 ? 'text-lg font-bold' : 'text-[8px]'}`}>
+        {content}
+      </span>
+      {/* Visual trail connector */}
+      {index > 0 && (
+        <div className="absolute w-4 h-px bg-white/20 -z-10 blur-[1px]" />
+      )}
     </motion.div>
   );
 };
 
 const Landing = () => {
-  // Coffee brown colors: 
-  // Base: #3d2b1f (Coffee)
-  // Darker: #2b1d14
-  // Accents: #6f4e37 (Coffee Brown)
-  // Background: #fdfaf7 (Creamy)
-
   return (
     <div className="bg-[#fdfaf7] text-[#3d2b1f] selection:bg-[#6f4e37] selection:text-white font-sans antialiased overflow-x-hidden">
-      <NumberSpiral />
+      <CoffeeDragon />
       
       {/* Navigation */}
       <nav className="fixed top-0 left-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-gradient-to-b from-[#fdfaf7] to-transparent">
