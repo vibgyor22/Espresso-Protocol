@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowRight, ChevronRight, Scale, FileText, Database, Activity, ShieldCheck, PlayCircle } from "lucide-react";
+import { ArrowRight, ChevronRight, Scale, FileText, Database, Activity, ShieldCheck, PlayCircle, Cpu, Layers, GitBranch, Zap } from "lucide-react";
 import heroImage from "@assets/generated_images/minimalist_abstract_architectural_espresso_data_structure.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,11 +32,11 @@ export default function Landing() {
           </div>
           <nav className="hidden md:flex gap-8 text-sm font-medium text-muted-foreground">
             <a href="#how-it-works" className="hover:text-foreground transition-colors">How it Works</a>
-            <a href="#use-cases" className="hover:text-foreground transition-colors">Use Cases</a>
+            <a href="#inference-layer" className="hover:text-foreground transition-colors">Inference Layer</a>
             <a href="#philosophy" className="hover:text-foreground transition-colors">Philosophy</a>
           </nav>
           <div className="flex gap-4">
-             <Button variant="ghost" size="sm" className="hidden sm:flex">Log in</Button>
+             <Button variant="ghost" size="sm" className="hidden sm:flex">Whitepaper</Button>
              <Button size="sm" className="font-serif italic">Request Access</Button>
           </div>
         </div>
@@ -44,7 +44,7 @@ export default function Landing() {
 
       <main>
         {/* Hero Section */}
-        <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden">
+        <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden border-b border-border/40">
           <div className="container mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
             <motion.div 
               initial="initial"
@@ -53,22 +53,22 @@ export default function Landing() {
               className="space-y-8"
             >
               <motion.div variants={fadeIn} className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
-                Pre-launch Preview
+                Protocol Development Phase
               </motion.div>
               <motion.h1 variants={fadeIn} className="text-4xl md:text-5xl lg:text-6xl font-serif font-medium leading-tight tracking-tight text-primary">
-                A standard for explainable, accountable data-driven decisions.
+                A standard for explainable, accountable econometrics.
               </motion.h1>
               <motion.p variants={fadeIn} className="text-xl text-muted-foreground max-w-lg leading-relaxed">
-                Espresso Protocol is a platform being built to help people turn raw data into structured, explainable inference they can question, verify, and trust.
+                Espresso Protocol is a specialized framework being built to transform raw data into formal, verifiable econometric inference.
               </motion.p>
               <motion.div variants={fadeIn} className="space-y-4">
                 <p className="text-sm font-medium text-foreground/80 border-l-2 border-primary/20 pl-4 py-1">
-                  Designed for decisions where assumptions matter, uncertainty must be visible, and results need to be defensible.
+                  Designed for high-stakes decisions where causal mechanisms must be proven, not just predicted.
                 </p>
                 <div className="flex flex-wrap gap-4 pt-4">
-                  <Button size="lg" className="h-12 px-8 text-base">Explore the idea</Button>
+                  <Button size="lg" className="h-12 px-8 text-base">Explore the architecture</Button>
                   <Button size="lg" variant="outline" className="h-12 px-8 text-base group">
-                    How it works <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    View Whitepaper <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </div>
               </motion.div>
@@ -90,116 +90,61 @@ export default function Landing() {
           </div>
         </section>
 
-        <Separator className="container mx-auto max-w-4xl opacity-50" />
-
         {/* Problem Statement */}
-        <section className="py-24 bg-background">
+        <section className="py-24 bg-background border-b border-border/40">
           <div className="container mx-auto px-4 max-w-3xl text-center space-y-8">
-            <h2 className="text-3xl font-serif text-primary">The Gap Between Analysis and Decision</h2>
+            <h2 className="text-3xl font-serif text-primary">The Epistemic Crisis in Data Science</h2>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Important decisions in finance, policy, research, and institutions rely on data analysis that is often opaque, difficult to reproduce, and hard to interrogate. 
+              Institutional decisions often rely on "black box" analysis where the connection between raw observation and causal inference is broken. Traditional econometric workflows are fragmented across notebooks, making them difficult to audit or replicate at scale.
             </p>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              Statistical methods are applied inconsistently, assumptions remain implicit, and advanced analysis requires specialized expertise. Newer AI tools can produce fluent explanations without clearly showing how conclusions are derived, making accountability difficult.
+            <p className="text-lg text-muted-foreground leading-relaxed italic border-t border-b border-border/40 py-6">
+              "We are building a bridge between statistical rigour and organizational accountability, ensuring that every decimal point in a result can be traced back to its underlying assumptions."
             </p>
           </div>
         </section>
 
-        {/* The Idea */}
-        <section className="py-24 bg-secondary/30">
-          <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-16 items-center max-w-5xl mx-auto">
-              <div>
-                <h3 className="text-2xl font-serif mb-6 text-primary">The Idea Behind Espresso Protocol</h3>
-                <div className="prose prose-stone text-muted-foreground">
-                  <p className="mb-4">
-                    We aim to standardize how data is transformed into inference. The goal is not to automate judgment but to make analytical steps <strong>explicit, structured, and understandable</strong>.
-                  </p>
-                  <ul className="space-y-2 list-none pl-0">
-                    <li className="flex items-start gap-3">
-                      <Scale className="w-5 h-5 mt-1 text-primary/60 shrink-0" />
-                      <span>Reduce barriers to rigorous statistical reasoning</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <Activity className="w-5 h-5 mt-1 text-primary/60 shrink-0" />
-                      <span>Make assumptions visible and explicitly stated</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <ShieldCheck className="w-5 h-5 mt-1 text-primary/60 shrink-0" />
-                      <span>Ensure results are reproducible by design</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <Database className="w-5 h-5 mt-1 text-primary/60 shrink-0" />
-                      <span>Separate statistical computation from explanation</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div className="bg-card p-8 rounded-sm shadow-sm border border-border/50">
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between pb-4 border-b border-border/50">
-                    <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">Inference Pipeline</span>
-                    <span className="text-xs font-mono text-primary">v0.1.0-alpha</span>
-                  </div>
-                  <div className="space-y-3 font-mono text-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-green-500/50" />
-                      <span className="text-foreground">Input: Macro_Economic_Data_2024.csv</span>
-                    </div>
-                    <div className="flex items-center gap-3 pl-5 border-l border-dashed border-border ml-1">
-                      <span className="text-muted-foreground">↳ Assumption: Inflation adjusted (CPI)</span>
-                    </div>
-                    <div className="flex items-center gap-3 pl-5 border-l border-dashed border-border ml-1">
-                      <span className="text-muted-foreground">↳ Method: Difference-in-Differences</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-primary/50" />
-                      <span className="text-foreground">Output: Causal Impact Estimate</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* How It Works */}
+        {/* How It Works - Detailed Process */}
         <section id="how-it-works" className="py-24 bg-background">
           <div className="container mx-auto px-4">
-            <div className="text-center max-w-2xl mx-auto mb-16">
-              <h2 className="text-3xl font-serif text-primary mb-4">How It Works</h2>
-              <p className="text-muted-foreground">A structured process to move from raw data to trusted conclusion.</p>
+            <div className="mb-16">
+              <h2 className="text-3xl font-serif text-primary mb-4">The Econometric Pipeline</h2>
+              <p className="text-muted-foreground max-w-2xl">The protocol enforces a strict sequential processing of data to eliminate common biases and ensure mathematical integrity.</p>
             </div>
             
-            <div className="grid md:grid-cols-4 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 {
-                  step: "01",
-                  title: "The Grind",
-                  desc: "Raw data is structured and documented so inputs, units, and transformations are clear."
+                  title: "1. The Grind",
+                  subtitle: "Data Normalization",
+                  desc: "Raw inputs undergo deterministic cleaning. Every null handling, unit conversion, and outlier treatment is recorded as a immutable transformation step.",
+                  icon: Layers
                 },
                 {
-                  step: "02",
-                  title: "The Extraction",
-                  desc: "Appropriate econometric or statistical methods and assumptions are selected using transparent rules."
+                  title: "2. The Extraction",
+                  subtitle: "Model Specification",
+                  desc: "The protocol maps the research question to optimal estimators (OLS, IV, GMM). Identification strategies are formally defined before any computation begins.",
+                  icon: GitBranch
                 },
                 {
-                  step: "03",
-                  title: "The Brew",
-                  desc: "Traceable statistical analysis is run, producing results with uncertainty, diagnostics, and sensitivity information."
+                  title: "3. The Brew",
+                  subtitle: "Execution & Testing",
+                  desc: "Analysis is executed in a sandboxed environment. The system automatically runs Monte Carlo simulations and sensitivity checks to test model robustness.",
+                  icon: Cpu
                 },
                 {
-                  step: "04",
-                  title: "The Serve",
-                  desc: "A language interface explains what was done, why, and what results mean, allowing follow-up interrogation."
+                  title: "4. The Serve",
+                  subtitle: "Explainable Output",
+                  desc: "Results are presented alongside a full audit trail. The language layer translates coefficients into human-readable logic without altering the underlying math.",
+                  icon: Zap
                 }
               ].map((item, i) => (
-                <div key={i} className="group relative">
-                  <div className="absolute top-0 left-0 text-8xl font-serif text-secondary/30 -z-10 select-none transition-colors group-hover:text-secondary/50">
-                    {item.step}
+                <div key={i} className="space-y-4 p-6 border border-border/60 hover:border-primary/20 transition-colors">
+                  <div className="w-10 h-10 bg-secondary flex items-center justify-center rounded-sm">
+                    <item.icon className="w-5 h-5 text-primary" />
                   </div>
-                  <div className="pt-12 pl-4">
-                    <h3 className="text-xl font-medium mb-3 text-foreground">{item.title}</h3>
+                  <div>
+                    <h3 className="font-serif text-lg font-bold text-primary">{item.title}</h3>
+                    <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">{item.subtitle}</p>
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       {item.desc}
                     </p>
@@ -210,115 +155,78 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Distinct Approach */}
-        <section id="philosophy" className="py-24 bg-primary text-primary-foreground">
-          <div className="container mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl font-serif mb-6">Explanation as a First-Class Requirement</h2>
-              <p className="text-primary-foreground/80 text-lg leading-relaxed mb-8">
-                Every result is tied to a specific dataset, explicit methods, stated assumptions, and reproducible statistical output. 
-              </p>
-              <p className="text-primary-foreground/80 text-lg leading-relaxed">
-                Language models are used only to communicate and clarify analysis, not to create it. This distinction ensures that the "reasoning" is mathematically grounded, not hallucinated.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="bg-primary-foreground/5 border-none text-primary-foreground">
-                <CardContent className="pt-6">
-                  <div className="mb-2 opacity-70"><FileText className="w-6 h-6" /></div>
-                  <h4 className="font-medium mb-1">Explicit Assumptions</h4>
-                  <p className="text-xs opacity-70">Nothing hidden in black boxes.</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-primary-foreground/5 border-none text-primary-foreground">
-                 <CardContent className="pt-6">
-                  <div className="mb-2 opacity-70"><Activity className="w-6 h-6" /></div>
-                  <h4 className="font-medium mb-1">Reproducible</h4>
-                  <p className="text-xs opacity-70">Always get the same result.</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-primary-foreground/5 border-none text-primary-foreground">
-                 <CardContent className="pt-6">
-                  <div className="mb-2 opacity-70"><Database className="w-6 h-6" /></div>
-                  <h4 className="font-medium mb-1">Data Tracing</h4>
-                  <p className="text-xs opacity-70">Lineage from source to insight.</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-primary-foreground/5 border-none text-primary-foreground">
-                 <CardContent className="pt-6">
-                  <div className="mb-2 opacity-70"><PlayCircle className="w-6 h-6" /></div>
-                  <h4 className="font-medium mb-1">Interactive</h4>
-                  <p className="text-xs opacity-70">Ask "what if" safely.</p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        {/* Use Cases */}
-        <section id="use-cases" className="py-24 bg-background">
+        {/* Inference Layer - Extreme Depth */}
+        <section id="inference-layer" className="py-24 bg-secondary/20 border-t border-border/40">
           <div className="container mx-auto px-4">
-            <div className="mb-12">
-              <h2 className="text-3xl font-serif text-primary mb-4">Specific Use Cases</h2>
-              <p className="text-muted-foreground">Where rigour meets reality.</p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-6">
-              {[
-                {
-                  title: "Policy Evaluation",
-                  desc: "Evaluating whether a policy changed outcomes over time, assessing whether changes are structural or temporary."
-                },
-                {
-                  title: "Macroeconomic Scenarios",
-                  desc: "Exploring how sensitive results are to model choices and what conditions would invalidate findings."
-                },
-                {
-                  title: "Academic Research",
-                  desc: "Supporting replicable academic research by separating statistical computation from explanation."
-                }
-              ].map((item, i) => (
-                <Card key={i} className="bg-secondary/20 border-border/60 shadow-sm hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="font-serif text-xl">{item.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {item.desc}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <div className="max-w-4xl mx-auto space-y-16">
+              <div className="text-center space-y-4">
+                <h2 className="text-4xl font-serif text-primary">The Inference Architecture</h2>
+                <p className="text-muted-foreground">A deep dive into how Espresso Protocol ensures absolute accountability at every layer.</p>
+              </div>
 
-            <div className="mt-16 p-8 bg-muted/30 rounded-lg border border-border/50">
-              <h3 className="text-xl font-serif mb-6 text-center">Types of Questions It Can Answer</h3>
-              <div className="flex flex-wrap justify-center gap-4">
-                {[
-                  "What changed after the intervention?",
-                  "Which assumptions drive this conclusion?",
-                  "How sensitive are results to model choices?",
-                  "What conditions would invalidate these findings?",
-                  "How do outcomes differ across groups?"
-                ].map((q, i) => (
-                  <span key={i} className="px-4 py-2 bg-background border rounded-full text-sm text-muted-foreground shadow-sm">
-                    {q}
-                  </span>
-                ))}
+              <div className="space-y-12">
+                <div className="grid md:grid-cols-[200px_1fr] gap-8 items-start">
+                  <div className="font-mono text-xs uppercase tracking-widest pt-2 text-primary">Layer 01: Provenance</div>
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-serif">Immutable Data Lineage</h4>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Every observation is hashed and timestamped. The protocol tracks the "genetic history" of a dataset—from the moment of ingestion through every merge, slice, and transformation. This eliminates "data amnesia" where researchers forget which version of a file produced which result.
+                    </p>
+                    <div className="bg-background/50 p-4 border border-border/40 font-mono text-xs space-y-1">
+                      <div className="text-green-600">// Lineage verification</div>
+                      <div>SHA-256: 8f42a... [Validated]</div>
+                      <div>Transformation: Log_Normalization(x) [Applied]</div>
+                      <div>Audit: Reversible [Confirmed]</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-[200px_1fr] gap-8 items-start">
+                  <div className="font-mono text-xs uppercase tracking-widest pt-2 text-primary">Layer 02: Axiomatics</div>
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-serif">A priori Assumption Mapping</h4>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Before execution, the protocol requires a formal declaration of assumptions (e.g., parallel trends, exogeneity). These are not just comments; they are logical constraints that the system uses to select appropriate diagnostic tests.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-[200px_1fr] gap-8 items-start">
+                  <div className="font-mono text-xs uppercase tracking-widest pt-2 text-primary">Layer 03: Computation</div>
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-serif">Statistically Identical Environments</h4>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Computation happens in an isolated environment that records every library version and hardware seed used. This ensures that analysis is bit-identical when re-run years later. No "reproducibility crisis" can occur within the protocol.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-[200px_1fr] gap-8 items-start">
+                  <div className="font-mono text-xs uppercase tracking-widest pt-2 text-primary">Layer 04: Interrogation</div>
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-serif">The Language Interrogation Layer</h4>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Our proprietary LLM implementation acts as an interface, not a generator. It queries the internal representation of the statistical model to answer "what-if" questions. 
+                    </p>
+                    <div className="border-l-2 border-primary/20 pl-6 py-4 italic text-muted-foreground">
+                      "If we exclude the 2008 financial crisis from the training set, how does the standard error on our primary coefficient change?"
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* Intended Impact */}
-        <section className="py-24 bg-secondary/30 text-center">
+        <section className="py-24 bg-background text-center">
           <div className="container mx-auto px-4 max-w-3xl">
-            <h2 className="text-3xl font-serif text-primary mb-6">Intended Impact</h2>
+            <h2 className="text-3xl font-serif text-primary mb-6">Built for High-Stakes Decisions</h2>
             <p className="text-xl text-muted-foreground leading-relaxed mb-12">
-              By making statistical reasoning transparent and easier to interrogate, Espresso Protocol aims to support better decision making, improve accountability, and increase trust in data-driven conclusions across sectors.
+              Espresso Protocol is not a general-purpose tool. It is designed for policymakers and researchers who require their data-driven conclusions to be legally and scientifically defensible.
             </p>
             <Button size="lg" className="h-14 px-10 text-lg font-serif italic">
-              Join the waiting list
+              Read the Whitepaper
             </Button>
           </div>
         </section>
@@ -331,7 +239,9 @@ export default function Landing() {
             <span className="font-serif font-bold text-base tracking-tight text-primary">Espresso Protocol</span>
           </div>
           <p className="text-sm text-muted-foreground text-center md:text-right max-w-md">
-            Espresso Protocol is an ongoing effort to rethink how people reason with data when the stakes are high.
+            Espresso Protocol is an ongoing effort to rethink econometric reasoning.
+            <br />
+            <span className="opacity-60 text-xs">A platform under development.</span>
           </p>
         </div>
       </footer>
