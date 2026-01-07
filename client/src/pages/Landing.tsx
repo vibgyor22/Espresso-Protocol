@@ -24,11 +24,11 @@ const ParallaxSection = ({ children, speed = 0.5, className = "", id = "" }: { c
 const AbstractAnalyticsBackground = () => {
   const { scrollYProgress } = useScroll();
   
-  // Create multiple columns of numbers
-  const columns = 8;
+  // Create many more columns of numbers for an abstract look
+  const columns = 24;
   
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 mix-blend-difference opacity-10 flex justify-around px-12">
+    <div className="fixed inset-0 pointer-events-none z-0 mix-blend-difference opacity-[0.07] flex justify-between px-4">
       {Array.from({ length: columns }).map((_, i) => (
         <NumberColumn key={i} index={i} progress={scrollYProgress} />
       ))}
@@ -37,23 +37,25 @@ const AbstractAnalyticsBackground = () => {
 };
 
 const NumberColumn = ({ index, progress }: { index: number, progress: any }) => {
-  // Each column moves at a slightly different speed for a deep parallax effect
-  const speed = 0.2 + (index * 0.1);
+  // Vary the speeds significantly for deep parallax
+  const speeds = [0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5];
+  const speed = speeds[index % speeds.length];
   const y = useTransform(progress, [0, 1], ["0%", `${-speed * 100}%`]);
   
   const numbers = useMemo(() => {
-    return Array.from({ length: 100 }).map(() => 
-      Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+    // Generate many more, longer numbers
+    return Array.from({ length: 150 }).map(() => 
+      Math.random().toString().slice(2, 14) + Math.random().toString().slice(2, 14)
     );
   }, []);
 
   return (
     <motion.div 
       style={{ y }} 
-      className="flex flex-col gap-4 font-mono text-[10px] text-white select-none pt-24"
+      className="flex flex-col gap-2 font-mono text-[6px] text-white select-none whitespace-nowrap"
     >
       {numbers.map((num, i) => (
-        <span key={i}>{num}</span>
+        <span key={i} className="opacity-50">{num}</span>
       ))}
     </motion.div>
   );
