@@ -28,7 +28,7 @@ const AbstractAnalyticsBackground = () => {
   const columns = 20;
   
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 flex justify-between px-2 overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none z-0 mix-blend-difference opacity-[0.12] flex justify-between px-2">
       {Array.from({ length: columns }).map((_, i) => (
         <NumberColumn key={i} index={i} progress={scrollYProgress} />
       ))}
@@ -37,44 +37,25 @@ const AbstractAnalyticsBackground = () => {
 };
 
 const NumberColumn = ({ index, progress }: { index: number, progress: any }) => {
-  // Combine scroll parallax with a continuous slow animation
+  // Vary the speeds significantly for deep parallax
   const speeds = [0.05, 0.08, 0.12, 0.15, 0.2];
   const speed = speeds[index % speeds.length];
-  
-  // Parallax offset based on scroll
-  const scrollY = useTransform(progress, [0, 1], ["0%", `${-speed * 100}%`]);
+  const y = useTransform(progress, [0, 1], ["0%", `${-speed * 100}%`]);
   
   const numbers = useMemo(() => {
     // Generate separate, shorter numbers for clear columns
-    return Array.from({ length: 150 }).map(() => 
+    return Array.from({ length: 120 }).map(() => 
       Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
     );
   }, []);
 
   return (
     <motion.div 
-      style={{ y: scrollY }}
-      animate={{ 
-        y: ["0%", "-5%"] 
-      }}
-      transition={{ 
-        duration: 20 + (index * 5), 
-        repeat: Infinity, 
-        ease: "linear" 
-      }}
-      className="flex flex-col gap-3 font-mono text-[9px] select-none pt-4 mix-blend-overlay"
+      style={{ y }} 
+      className="flex flex-col gap-3 font-mono text-[8px] text-white select-none pt-4"
     >
       {numbers.map((num, i) => (
-        <span 
-          key={i} 
-          className="tracking-tighter opacity-30 text-[#6f4e37] dark:text-[#dcd2cc]"
-          style={{
-            // Explicitly set color for better visibility on brown if overlay isn't enough
-            filter: "brightness(1.2)"
-          }}
-        >
-          {num}
-        </span>
+        <span key={i} className="tracking-tighter opacity-40">{num}</span>
       ))}
     </motion.div>
   );
