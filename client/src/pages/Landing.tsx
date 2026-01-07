@@ -21,74 +21,40 @@ const ParallaxSection = ({ children, speed = 0.5, className = "", id = "" }: { c
   );
 };
 
-const CoffeeDragon = () => {
+const AbstractAnalyticsBackground = () => {
   const { scrollYProgress } = useScroll();
   
-  // Smooth out the scroll progress for a more organic feel
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 50, damping: 20 });
-  
-  // Dragon body segments
-  const segments = 24;
+  // Create multiple columns of numbers
+  const columns = 8;
   
   return (
-    <div className="fixed inset-0 pointer-events-none z-40 mix-blend-difference overflow-hidden">
-      {Array.from({ length: segments }).map((_, i) => (
-        <DragonSegment key={i} index={i} total={segments} progress={smoothProgress} />
+    <div className="fixed inset-0 pointer-events-none z-0 mix-blend-difference opacity-10 flex justify-around px-12">
+      {Array.from({ length: columns }).map((_, i) => (
+        <NumberColumn key={i} index={i} progress={scrollYProgress} />
       ))}
     </div>
   );
 };
 
-const DragonSegment = ({ index, total, progress }: { index: number, total: number, progress: any }) => {
-  // Offset each segment's progress to create the "snake" trail effect
-  const offset = index * 0.015;
+const NumberColumn = ({ index, progress }: { index: number, progress: any }) => {
+  // Each column moves at a slightly different speed for a deep parallax effect
+  const speed = 0.2 + (index * 0.1);
+  const y = useTransform(progress, [0, 1], ["0%", `${-speed * 100}%`]);
   
-  // Spiral motion across the page
-  // X-position: Spirals from 5% to 95% multiple times
-  const x = useTransform(
-    progress,
-    [0, 0.25, 0.5, 0.75, 1],
-    [
-      `${10 + (index * 0.2)}%`, 
-      `${90 - (index * 0.2)}%`, 
-      `${15 + (index * 0.2)}%`, 
-      `${85 - (index * 0.2)}%`, 
-      "50%"
-    ]
-  );
-  
-  // Y-position: Flows down the page
-  const y = useTransform(progress, [0, 1], [`${-10 + (index * 2)}vh`, `${110 + (index * 2)}vh`]);
-  
-  // Scaling: Head is larger than tail
-  const scale = 1 - (index / total) * 0.6;
-  
-  // Opacity: Fades towards the tail
-  const opacity = (1 - (index / total)) * 0.8;
-
-  // Numbers logic: Head shows more defined numbers, tail is more abstract
-  const content = useMemo(() => {
-    if (index === 0) return "▼"; // Head indicator
-    return Math.floor(Math.random() * 99).toString().padStart(2, '0');
+  const numbers = useMemo(() => {
+    return Array.from({ length: 100 }).map(() => 
+      Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+    );
   }, []);
 
   return (
-    <motion.div
-      style={{
-        left: x,
-        top: y,
-        scale,
-        opacity,
-      }}
-      className="absolute flex items-center justify-center pointer-events-none"
+    <motion.div 
+      style={{ y }} 
+      className="flex flex-col gap-4 font-mono text-[10px] text-white select-none pt-24"
     >
-      <span className={`font-mono text-white leading-none select-none ${index === 0 ? 'text-lg font-bold' : 'text-[8px]'}`}>
-        {content}
-      </span>
-      {/* Visual trail connector */}
-      {index > 0 && (
-        <div className="absolute w-4 h-px bg-white/20 -z-10 blur-[1px]" />
-      )}
+      {numbers.map((num, i) => (
+        <span key={i}>{num}</span>
+      ))}
     </motion.div>
   );
 };
@@ -96,7 +62,7 @@ const DragonSegment = ({ index, total, progress }: { index: number, total: numbe
 const Landing = () => {
   return (
     <div className="bg-[#fdfaf7] text-[#3d2b1f] selection:bg-[#6f4e37] selection:text-white font-sans antialiased overflow-x-hidden">
-      <CoffeeDragon />
+      <AbstractAnalyticsBackground />
       
       {/* Navigation */}
       <nav className="fixed top-0 left-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-gradient-to-b from-[#fdfaf7] to-transparent">
