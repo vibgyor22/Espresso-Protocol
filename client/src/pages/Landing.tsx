@@ -24,26 +24,35 @@ const ParallaxSection = ({ children, speed = 0.5, className = "", id = "" }: { c
 const AbstractAnalyticsBackground = () => {
   const { scrollYProgress } = useScroll();
   
-  // Create many more columns of numbers for an abstract look
+  // Create vertical columns of numbers for abstract quantitative aesthetic
   const columns = 20;
   
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 mix-blend-difference opacity-[0.12] flex justify-between px-2">
-      {Array.from({ length: columns }).map((_, i) => (
-        <NumberColumn key={i} index={i} progress={scrollYProgress} />
-      ))}
-    </div>
+    <>
+      {/* Dark layer - visible on light backgrounds */}
+      <div className="fixed inset-0 pointer-events-none z-[1] flex justify-between px-2 mix-blend-darken opacity-[0.15]">
+        {Array.from({ length: columns }).map((_, i) => (
+          <NumberColumn key={`dark-${i}`} index={i} progress={scrollYProgress} color="#3d2b1f" />
+        ))}
+      </div>
+      {/* Light layer - visible on dark backgrounds */}
+      <div className="fixed inset-0 pointer-events-none z-[1] flex justify-between px-2 mix-blend-lighten opacity-[0.2]">
+        {Array.from({ length: columns }).map((_, i) => (
+          <NumberColumn key={`light-${i}`} index={i} progress={scrollYProgress} color="#fdfaf7" />
+        ))}
+      </div>
+    </>
   );
 };
 
-const NumberColumn = ({ index, progress }: { index: number, progress: any }) => {
-  // Vary the speeds significantly for deep parallax
+const NumberColumn = ({ index, progress, color }: { index: number, progress: any, color: string }) => {
+  // Vary the speeds for subtle parallax depth
   const speeds = [0.05, 0.08, 0.12, 0.15, 0.2];
   const speed = speeds[index % speeds.length];
   const y = useTransform(progress, [0, 1], ["0%", `${-speed * 100}%`]);
   
   const numbers = useMemo(() => {
-    // Generate separate, shorter numbers for clear columns
+    // Generate 6-digit numbers for clear vertical columns
     return Array.from({ length: 120 }).map(() => 
       Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
     );
@@ -51,11 +60,11 @@ const NumberColumn = ({ index, progress }: { index: number, progress: any }) => 
 
   return (
     <motion.div 
-      style={{ y }} 
-      className="flex flex-col gap-3 font-mono text-[8px] text-white select-none pt-4"
+      style={{ y, color }} 
+      className="flex flex-col gap-3 font-mono text-[8px] select-none pt-0"
     >
       {numbers.map((num, i) => (
-        <span key={i} className="tracking-tighter opacity-40">{num}</span>
+        <span key={i} className="tracking-tight">{num}</span>
       ))}
     </motion.div>
   );
