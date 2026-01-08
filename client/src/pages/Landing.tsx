@@ -1,7 +1,7 @@
-import React, { useRef, useMemo } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ShieldCheck, Microscope, LineChart, Database, ArrowDown } from 'lucide-react';
+import { ArrowRight, Check, AlertTriangle, Database, Cpu, BarChart3, MessageSquare, TrendingUp } from 'lucide-react';
 
 const ParallaxSection = ({ children, speed = 0.5, className = "", id = "" }: { children: React.ReactNode, speed?: number, className?: string, id?: string }) => {
   const ref = useRef(null);
@@ -21,59 +21,238 @@ const ParallaxSection = ({ children, speed = 0.5, className = "", id = "" }: { c
   );
 };
 
-const AbstractAnalyticsBackground = () => {
-  const { scrollYProgress } = useScroll();
-  
-  // Create vertical columns of numbers for abstract quantitative aesthetic
-  const columns = 20;
-  
-  return (
-    <>
-      {/* Dark layer - visible on light backgrounds */}
-      <div className="fixed inset-0 pointer-events-none z-[1] flex justify-between px-2 mix-blend-darken opacity-[0.15]">
-        {Array.from({ length: columns }).map((_, i) => (
-          <NumberColumn key={`dark-${i}`} index={i} progress={scrollYProgress} color="#3d2b1f" />
-        ))}
-      </div>
-      {/* Light layer - visible on dark backgrounds */}
-      <div className="fixed inset-0 pointer-events-none z-[1] flex justify-between px-2 mix-blend-lighten opacity-[0.2]">
-        {Array.from({ length: columns }).map((_, i) => (
-          <NumberColumn key={`light-${i}`} index={i} progress={scrollYProgress} color="#fdfaf7" />
-        ))}
-      </div>
-    </>
-  );
-};
-
-const NumberColumn = ({ index, progress, color }: { index: number, progress: any, color: string }) => {
-  // Vary the speeds for subtle parallax depth
-  const speeds = [0.05, 0.08, 0.12, 0.15, 0.2];
-  const speed = speeds[index % speeds.length];
-  const y = useTransform(progress, [0, 1], ["0%", `${-speed * 100}%`]);
-  
+// Minimal abstract number texture - only used in select strategic locations
+const SubtleNumberTexture = ({ position = "right", opacity = 0.04 }: { position?: "left" | "right" | "center", opacity?: number }) => {
   const numbers = useMemo(() => {
-    // Generate 6-digit numbers for clear vertical columns
-    return Array.from({ length: 120 }).map(() => 
-      Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
+    return Array.from({ length: 8 }).map(() => 
+      Array.from({ length: 6 }).map(() => 
+        Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
+      )
     );
   }, []);
 
+  const positionClasses = {
+    left: "left-0",
+    right: "right-0", 
+    center: "left-1/2 -translate-x-1/2"
+  };
+
   return (
-    <motion.div 
-      style={{ y, color }} 
-      className="flex flex-col gap-3 font-mono text-[8px] select-none pt-0"
+    <div 
+      className={`absolute top-1/2 -translate-y-1/2 ${positionClasses[position]} pointer-events-none select-none`}
+      style={{ opacity }}
     >
-      {numbers.map((num, i) => (
-        <span key={i} className="tracking-tight">{num}</span>
-      ))}
-    </motion.div>
+      <div className="flex gap-3 font-mono text-[7px] text-[#3d2b1f] rotate-12">
+        {numbers.map((col, i) => (
+          <div key={i} className="flex flex-col gap-1">
+            {col.map((num, j) => (
+              <span key={j} className="tracking-tighter">{num}</span>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Inference Console Component with animated workflow
+const InferenceConsole = () => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  
+  const steps = [
+    {
+      type: "user",
+      content: "What is the causal effect of raising interest rates on unemployment in the Eurozone?",
+      timestamp: "14:32:01"
+    },
+    {
+      type: "system",
+      label: "DATA INGESTION",
+      content: "Loading ECB policy rates, Eurostat unemployment (2000-2024)...",
+      details: ["→ 288 monthly observations", "→ 19 member states panel", "→ 4 control variables identified"],
+      timestamp: "14:32:02"
+    },
+    {
+      type: "system", 
+      label: "ASSUMPTIONS CHECK",
+      content: "Validating econometric assumptions...",
+      details: [
+        "✓ Stationarity: ADF test passed (p < 0.01)",
+        "✓ No multicollinearity: VIF < 5 for all regressors",
+        "⚠ Heteroskedasticity detected → Robust SE enabled",
+        "✓ Lag structure: BIC suggests 4 lags optimal"
+      ],
+      timestamp: "14:32:04"
+    },
+    {
+      type: "system",
+      label: "MODEL SELECTION",
+      content: "Selecting appropriate specification...",
+      details: [
+        "→ Causal question detected: IV/2SLS recommended",
+        "→ Panel structure: Fixed effects for country heterogeneity", 
+        "→ Time dynamics: Distributed lag model (4 quarters)",
+        "→ Instrument: US Fed funds rate (relevance F = 42.3)"
+      ],
+      timestamp: "14:32:05"
+    },
+    {
+      type: "system",
+      label: "ESTIMATION",
+      content: "Running Panel IV with fixed effects...",
+      timestamp: "14:32:06"
+    },
+    {
+      type: "result",
+      label: "RESULTS",
+      content: "A 100bp increase in ECB rates is associated with a 0.34pp rise in unemployment over 12 months.",
+      details: [
+        "Coefficient: 0.0034 (SE: 0.0008)",
+        "95% CI: [0.0018, 0.0050]",
+        "First-stage F: 42.3 (strong instrument)",
+        "Hansen J: 0.82 (p = 0.36, valid overid)"
+      ],
+      validation: "Robustness: Result stable across 3 alternative specifications (±0.0006)",
+      timestamp: "14:32:08"
+    },
+    {
+      type: "user",
+      content: "What would unemployment look like if rates increased by 200bp next quarter?",
+      timestamp: "14:32:45"
+    },
+    {
+      type: "result",
+      label: "FORECAST",
+      content: "Projected unemployment trajectory under 200bp rate hike:",
+      details: [
+        "Q1 2025: 6.4% → 6.5% (+0.1pp)",
+        "Q2 2025: 6.5% → 6.8% (+0.3pp)", 
+        "Q3 2025: 6.8% → 7.2% (+0.4pp)",
+        "Q4 2025: 7.2% → 7.5% (+0.3pp)"
+      ],
+      validation: "Prediction interval: ±0.4pp (68% CI). Model assumes no concurrent fiscal response.",
+      timestamp: "14:32:47"
+    }
+  ];
+
+  useEffect(() => {
+    if (!isPlaying) return;
+    
+    const timer = setInterval(() => {
+      setCurrentStep(prev => (prev + 1) % steps.length);
+    }, 3000);
+    
+    return () => clearInterval(timer);
+  }, [isPlaying, steps.length]);
+
+  return (
+    <div className="bg-[#1a1410] rounded-sm border border-[#3d2b1f]/30 overflow-hidden shadow-2xl">
+      {/* Console Header */}
+      <div className="bg-[#2b1d14] px-4 py-3 flex items-center justify-between border-b border-[#3d2b1f]/20">
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#6f4e37]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#8b6914]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#4a7c59]" />
+        </div>
+        <span className="text-[9px] uppercase tracking-[0.3em] text-[#6f4e37] font-mono">Espresso Inference Console</span>
+        <button 
+          onClick={() => setIsPlaying(!isPlaying)}
+          className="text-[8px] uppercase tracking-wider text-[#6f4e37] hover:text-[#a67c52] transition-colors"
+          data-testid="button-console-toggle"
+        >
+          {isPlaying ? "Pause" : "Play"}
+        </button>
+      </div>
+      
+      {/* Console Body */}
+      <div className="p-6 font-mono text-sm max-h-[500px] overflow-y-auto">
+        <AnimatePresence mode="wait">
+          {steps.slice(0, currentStep + 1).map((step, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className={`mb-6 ${i === currentStep ? '' : 'opacity-60'}`}
+            >
+              {step.type === "user" ? (
+                <div className="flex gap-3">
+                  <MessageSquare className="w-4 h-4 text-[#a67c52] flex-shrink-0 mt-1" />
+                  <div>
+                    <div className="text-[8px] text-[#6f4e37] mb-1">[{step.timestamp}] USER</div>
+                    <p className="text-[#fdfaf7]">{step.content}</p>
+                  </div>
+                </div>
+              ) : step.type === "result" ? (
+                <div className="flex gap-3">
+                  <BarChart3 className="w-4 h-4 text-[#4a7c59] flex-shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <div className="text-[8px] text-[#4a7c59] mb-1">[{step.timestamp}] {step.label}</div>
+                    <p className="text-[#fdfaf7] font-medium mb-3">{step.content}</p>
+                    {step.details && (
+                      <div className="bg-[#2b1d14] rounded px-3 py-2 mb-2">
+                        {step.details.map((detail, j) => (
+                          <div key={j} className="text-[#dcd2cc] text-xs py-0.5">{detail}</div>
+                        ))}
+                      </div>
+                    )}
+                    {step.validation && (
+                      <div className="flex items-start gap-2 text-xs text-[#8b6914]">
+                        <Check className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                        <span>{step.validation}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-3">
+                  <Cpu className="w-4 h-4 text-[#6f4e37] flex-shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <div className="text-[8px] text-[#6f4e37] mb-1">[{step.timestamp}] {step.label}</div>
+                    <p className="text-[#dcd2cc] mb-2">{step.content}</p>
+                    {step.details && (
+                      <div className="pl-2 border-l border-[#3d2b1f]/30">
+                        {step.details.map((detail, j) => (
+                          <div key={j} className={`text-xs py-0.5 ${
+                            detail.startsWith('✓') ? 'text-[#4a7c59]' : 
+                            detail.startsWith('⚠') ? 'text-[#8b6914]' : 
+                            'text-[#6f4e37]'
+                          }`}>{detail}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        
+        {/* Blinking cursor */}
+        <motion.span 
+          animate={{ opacity: [1, 0] }}
+          transition={{ duration: 0.8, repeat: Infinity }}
+          className="inline-block w-2 h-4 bg-[#a67c52] ml-1"
+        />
+      </div>
+      
+      {/* Progress indicator */}
+      <div className="bg-[#2b1d14] px-4 py-2 flex gap-1">
+        {steps.map((_, i) => (
+          <div 
+            key={i} 
+            className={`h-1 flex-1 rounded-full transition-colors ${i <= currentStep ? 'bg-[#6f4e37]' : 'bg-[#3d2b1f]/30'}`} 
+          />
+        ))}
+      </div>
+    </div>
   );
 };
 
 const Landing = () => {
   return (
     <div className="bg-[#fdfaf7] text-[#3d2b1f] selection:bg-[#6f4e37] selection:text-white font-sans antialiased overflow-x-hidden">
-      <AbstractAnalyticsBackground />
       
       {/* Navigation */}
       <nav className="fixed top-0 left-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-gradient-to-b from-[#fdfaf7] to-transparent">
@@ -81,9 +260,9 @@ const Landing = () => {
           Espresso Protocol
         </div>
         <div className="hidden md:flex gap-8 text-[10px] uppercase tracking-[0.2em] font-medium text-[#6f4e37]">
-          <a href="#vision" className="hover:text-[#a67c52] transition-colors" data-testid="link-nav-vision">Vision</a>
+          <a href="#problem" className="hover:text-[#a67c52] transition-colors" data-testid="link-nav-problem">Why</a>
           <a href="#cases" className="hover:text-[#a67c52] transition-colors" data-testid="link-nav-cases">Use Cases</a>
-          <a href="#process" className="hover:text-[#a67c52] transition-colors" data-testid="link-nav-process">Process</a>
+          <a href="#console" className="hover:text-[#a67c52] transition-colors" data-testid="link-nav-console">Console</a>
           <a href="#impact" className="hover:text-[#a67c52] transition-colors" data-testid="link-nav-impact">Impact</a>
         </div>
       </nav>
@@ -123,17 +302,78 @@ const Landing = () => {
         </div>
       </ParallaxSection>
 
-      {/* Use Cases */}
-      <section id="cases" className="bg-[#3d2b1f] text-[#fdfaf7] py-48 px-6 md:px-24 relative">
-        <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none overflow-hidden">
-          <div className="grid grid-cols-12 h-full w-full">
-            {[...Array(12)].map((_, i) => (
-              <div key={i} className="border-r border-[#fdfaf7] h-full" />
-            ))}
+      {/* Problem Statement Section */}
+      <section id="problem" className="bg-[#3d2b1f] text-[#fdfaf7] py-32 px-6 md:px-24 relative overflow-hidden">
+        {/* Subtle number texture - strategic placement */}
+        <SubtleNumberTexture position="right" opacity={0.03} />
+        
+        <div className="max-w-5xl mx-auto relative z-10">
+          <span className="text-[10px] uppercase tracking-[0.4em] text-[#dcd2cc] font-bold block mb-16">The Problem</span>
+          
+          <div className="grid md:grid-cols-2 gap-16 mb-24">
+            <div>
+              <h2 className="text-4xl md:text-5xl font-serif mb-8 text-[#fdfaf7]" data-testid="text-problem-headline">
+                Why LLMs aren't enough for rigorous analysis
+              </h2>
+              <p className="text-lg text-[#dcd2cc] leading-relaxed font-light">
+                Large Language Models can summarize, generate, and explain—but they cannot perform statistically valid inference. They hallucinate coefficients, invent p-values, and cannot distinguish correlation from causation.
+              </p>
+            </div>
+            <div className="space-y-6">
+              {[
+                { icon: AlertTriangle, title: "No statistical guarantees", desc: "LLMs provide plausible-sounding but statistically meaningless outputs" },
+                { icon: Database, title: "No data grounding", desc: "Responses aren't derived from actual estimation on real datasets" },
+                { icon: TrendingUp, title: "No causal reasoning", desc: "Cannot apply identification strategies or handle endogeneity" }
+              ].map((item, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="flex gap-4 items-start"
+                  data-testid={`card-problem-${i}`}
+                >
+                  <item.icon className="w-5 h-5 text-[#a67c52] flex-shrink-0 mt-1" />
+                  <div>
+                    <h4 className="text-[#fdfaf7] font-medium mb-1">{item.title}</h4>
+                    <p className="text-sm text-[#dcd2cc]/80">{item.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-[#fdfaf7]/10 pt-16">
+            <h3 className="text-2xl font-serif text-[#fdfaf7] mb-8">What Espresso Protocol addresses</h3>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { title: "Opaque methodology", solution: "Every model choice, assumption, and diagnostic is exposed and queryable" },
+                { title: "Unreproducible results", solution: "Full audit trail from raw data to final coefficient with version control" },
+                { title: "Inaccessible expertise", solution: "Natural language interface to professional-grade econometric methods" }
+              ].map((item, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="border-l border-[#6f4e37] pl-6"
+                  data-testid={`card-solution-${i}`}
+                >
+                  <h4 className="text-xs uppercase tracking-widest text-[#a67c52] mb-3">{item.title}</h4>
+                  <p className="text-[#dcd2cc] font-light leading-relaxed">{item.solution}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
+      </section>
+
+      {/* Use Cases */}
+      <section id="cases" className="bg-[#fdfaf7] py-48 px-6 md:px-24 relative">
         <div className="max-w-6xl mx-auto relative z-10">
-          <span className="text-[10px] uppercase tracking-[0.4em] text-[#dcd2cc] font-bold block mb-24">Specific Use Cases</span>
+          <span className="text-[10px] uppercase tracking-[0.4em] text-[#6f4e37] font-bold block mb-24">Specific Use Cases</span>
           <div className="grid md:grid-cols-2 gap-x-32 gap-y-24">
             {[
               { title: "Macroeconomic Forecasting", description: "Interactively explore forecasts while understanding how assumptions and model choices affect outcomes." },
@@ -149,8 +389,8 @@ const Landing = () => {
                 className="group" 
                 data-testid={`card-use-case-${i}`}
               >
-                <h4 className="text-2xl font-serif text-[#fdfaf7] mb-6 group-hover:text-[#dcd2cc] transition-colors">{useCase.title}</h4>
-                <p className="text-base text-[#dcd2cc] leading-relaxed font-light">{useCase.description}</p>
+                <h4 className="text-2xl font-serif text-[#3d2b1f] mb-6 group-hover:text-[#6f4e37] transition-colors">{useCase.title}</h4>
+                <p className="text-base text-[#6f4e37] leading-relaxed font-light">{useCase.description}</p>
               </motion.div>
             ))}
           </div>
@@ -158,7 +398,10 @@ const Landing = () => {
       </section>
 
       {/* Architecture / Vision */}
-      <ParallaxSection id="vision" speed={0.12} className="bg-[#fdfaf7]">
+      <ParallaxSection id="vision" speed={0.12} className="bg-[#fdfaf7] relative">
+        {/* Subtle number texture - bottom left corner */}
+        <SubtleNumberTexture position="left" opacity={0.025} />
+        
         <div className="max-w-4xl relative">
           <motion.div 
             className="absolute -left-24 top-0 w-px h-full bg-gradient-to-b from-transparent via-[#6f4e37]/20 to-transparent hidden xl:block"
@@ -257,6 +500,36 @@ const Landing = () => {
           </div>
         </ParallaxSection>
       </div>
+
+      {/* Inference Console Showcase */}
+      <section id="console" className="bg-[#fdfaf7] py-32 px-6 md:px-24 relative overflow-hidden">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-16">
+            <span className="text-[10px] uppercase tracking-[0.4em] text-[#6f4e37] font-bold block mb-8">Inference Console</span>
+            <h2 className="text-4xl md:text-6xl font-serif text-[#3d2b1f] mb-6" data-testid="text-console-headline">
+              See the reasoning, not just the answer
+            </h2>
+            <p className="text-xl text-[#6f4e37] font-light max-w-2xl">
+              Watch how Espresso processes a real macroeconomic policy question—from data ingestion through model selection to validated results.
+            </p>
+          </div>
+          
+          <InferenceConsole />
+          
+          <div className="mt-16 grid md:grid-cols-3 gap-8 text-center">
+            {[
+              { label: "Transparent", desc: "Every step logged and queryable" },
+              { label: "Validated", desc: "Statistical checks at each stage" },
+              { label: "Interactive", desc: "Ask follow-up questions naturally" }
+            ].map((item, i) => (
+              <div key={i} className="text-[#6f4e37]" data-testid={`text-console-feature-${i}`}>
+                <div className="text-sm uppercase tracking-widest font-medium mb-2">{item.label}</div>
+                <div className="text-sm font-light opacity-70">{item.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Impact */}
       <ParallaxSection id="impact" speed={0.04} className="bg-[#fdfaf7] border-y border-[#e5e0dd]">
