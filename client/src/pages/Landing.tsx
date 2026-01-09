@@ -4,6 +4,7 @@ import {
   useScroll,
   useTransform,
   AnimatePresence,
+  useInView,
 } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
@@ -98,8 +99,11 @@ const SubtleNumberTexture = ({
 
 // Inference Console Component with animated workflow
 const InferenceConsole = () => {
+  const consoleRef = useRef(null);
+  const isInView = useInView(consoleRef, { once: true, amount: 0.3 });
   const [currentStep, setCurrentStep] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [hasCompleted, setHasCompleted] = useState(false);
 
   const steps = [
     {
@@ -186,32 +190,30 @@ const InferenceConsole = () => {
     },
   ];
 
-  const [hasCompleted, setHasCompleted] = useState(false);
-
+  // Start animation when scrolled into view
   useEffect(() => {
-    if (!isPlaying || hasCompleted) return;
+    if (isInView && !hasStarted) {
+      setHasStarted(true);
+    }
+  }, [isInView, hasStarted]);
+
+  // Run animation once, then stop
+  useEffect(() => {
+    if (!hasStarted || hasCompleted) return;
     if (currentStep >= steps.length - 1) {
       setHasCompleted(true);
-      setIsPlaying(false);
       return;
     }
 
-    const timer = setInterval(() => {
-      setCurrentStep((prev) => {
-        if (prev >= steps.length - 1) {
-          setHasCompleted(true);
-          setIsPlaying(false);
-          return prev;
-        }
-        return prev + 1;
-      });
+    const timer = setTimeout(() => {
+      setCurrentStep((prev) => prev + 1);
     }, 1200);
 
-    return () => clearInterval(timer);
-  }, [isPlaying, currentStep, steps.length, hasCompleted]);
+    return () => clearTimeout(timer);
+  }, [hasStarted, hasCompleted, currentStep, steps.length]);
 
   return (
-    <div className="bg-[#1a1410] rounded-sm border border-[#3d2b1f]/30 overflow-hidden shadow-2xl">
+    <div ref={consoleRef} className="bg-[#1a1410] rounded-sm border border-[#3d2b1f]/30 overflow-hidden shadow-2xl">
       {/* Console Header */}
       <div className="bg-[#2b1d14] px-4 py-3 flex items-center justify-between border-b border-[#3d2b1f]/20">
         <div className="flex items-center gap-2">
@@ -222,13 +224,7 @@ const InferenceConsole = () => {
         <span className="text-[9px] uppercase tracking-[0.3em] text-[#6f4e37] font-mono">
           Espresso Inference Console
         </span>
-        <button
-          onClick={() => setIsPlaying(!isPlaying)}
-          className="text-[8px] uppercase tracking-wider text-[#6f4e37] hover:text-[#a67c52] transition-colors"
-          data-testid="button-console-toggle"
-        >
-          {isPlaying ? "Pause" : "Play"}
-        </button>
+        <div className="w-12" />
       </div>
 
       {/* Console Body */}
@@ -445,20 +441,19 @@ const Landing = () => {
               className="max-w-3xl mb-12"
             >
               <h2
-                className="text-4xl md:text-5xl font-serif mb-8 text-[#fdfaf7]"
+                className="text-4xl md:text-5xl font-serif mb-6 text-[#fdfaf7]"
                 data-testid="text-problem-accessibility-headline"
               >
-                Impactful research, limited by statistical barriers
+                You have the data. You know the question.<br />
+                <span className="text-[#a67c52]">The statistics shouldn't stop you.</span>
               </h2>
-              <p className="text-lg text-[#dcd2cc] leading-relaxed font-light">
-                Researchers across disciplines—public health, education, climate science, 
-                development economics—have domain expertise and meaningful data. But without 
-                deep statistical training, they're locked out of the very methods that could 
-                validate their most important findings.
+              <p className="text-xl text-[#dcd2cc] leading-relaxed font-light">
+                Researchers with real-world impact—in health, policy, climate—shouldn't 
+                need a PhD in econometrics to get statistically valid answers.
               </p>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 gap-12">
+            <div className="grid md:grid-cols-2 gap-8">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -466,16 +461,10 @@ const Landing = () => {
                 className="bg-[#2b1d14]/50 p-8 rounded-sm border border-[#fdfaf7]/5"
                 data-testid="card-problem-accessibility-1"
               >
-                <h4 className="text-xl font-serif text-[#fdfaf7] mb-4">
-                  The expertise gap
-                </h4>
-                <p className="text-[#dcd2cc]/80 font-light leading-relaxed mb-4">
-                  Econometric methods—instrumental variables, difference-in-differences, 
-                  panel fixed effects—require years of specialized training. Most researchers 
-                  either outsource analysis or avoid rigorous causal claims entirely.
-                </p>
-                <p className="text-sm text-[#a67c52] font-medium">
-                  The result: Important questions go unanswered, or answers lack statistical rigor.
+                <p className="text-[#a67c52] text-sm uppercase tracking-widest mb-4 font-medium">Today</p>
+                <p className="text-[#fdfaf7] text-lg font-light leading-relaxed">
+                  IV, DiD, panel models—years to learn, easy to misapply. 
+                  Most researchers either outsource or skip rigorous analysis entirely.
                 </p>
               </motion.div>
 
@@ -487,16 +476,10 @@ const Landing = () => {
                 className="bg-[#2b1d14]/50 p-8 rounded-sm border border-[#fdfaf7]/5"
                 data-testid="card-problem-accessibility-2"
               >
-                <h4 className="text-xl font-serif text-[#fdfaf7] mb-4">
-                  What Espresso enables
-                </h4>
-                <p className="text-[#dcd2cc]/80 font-light leading-relaxed mb-4">
-                  Validated results using your own data—statistically grounded, assumption-transparent, 
-                  and fully interrogable. Ask follow-up questions, understand why the model made 
-                  specific choices, and trust the methodology.
-                </p>
-                <p className="text-sm text-[#4a7c59] font-medium">
-                  Econometrics becomes accessible without becoming opaque.
+                <p className="text-[#4a7c59] text-sm uppercase tracking-widest mb-4 font-medium">With Espresso</p>
+                <p className="text-[#fdfaf7] text-lg font-light leading-relaxed">
+                  Bring your data. Ask your question. Get validated results with 
+                  transparent assumptions you can actually interrogate.
                 </p>
               </motion.div>
             </div>
@@ -506,55 +489,56 @@ const Landing = () => {
           <div className="border-t border-[#fdfaf7]/10 mb-24" />
 
           {/* Second Problem: LLM Limitations */}
-          <div className="grid md:grid-cols-2 gap-16 mb-24">
-            <div>
+          <div className="mb-24">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="max-w-3xl mb-12"
+            >
               <h2
-                className="text-4xl md:text-5xl font-serif mb-8 text-[#fdfaf7]"
+                className="text-4xl md:text-5xl font-serif mb-6 text-[#fdfaf7]"
                 data-testid="text-problem-headline"
               >
-                Why LLMs aren't enough for rigorous analysis
+                LLMs sound confident.<br />
+                <span className="text-[#a67c52]">But they can't do statistics.</span>
               </h2>
-              <p className="text-lg text-[#dcd2cc] leading-relaxed font-light">
-                Large Language Models can summarize, generate, and explain—but
-                they cannot perform statistically valid inference. They
-                hallucinate coefficients, invent p-values, and cannot
-                distinguish correlation from causation.
+              <p className="text-xl text-[#dcd2cc] leading-relaxed font-light">
+                They hallucinate p-values, invent coefficients, and confuse correlation with causation. 
+                For real econometric analysis, you need real computation.
               </p>
-            </div>
-            <div className="space-y-6">
+            </motion.div>
+            
+            <div className="grid md:grid-cols-3 gap-6">
               {[
                 {
                   icon: AlertTriangle,
-                  title: "No statistical guarantees",
-                  desc: "LLMs provide plausible-sounding but statistically meaningless outputs",
+                  label: "Fabricated outputs",
+                  desc: "Plausible numbers with zero statistical validity",
                 },
                 {
                   icon: Database,
-                  title: "No data grounding",
-                  desc: "Responses aren't derived from actual estimation on real datasets",
+                  label: "No actual estimation",
+                  desc: "Never runs regressions on your real data",
                 },
                 {
                   icon: TrendingUp,
-                  title: "No causal reasoning",
-                  desc: "Cannot apply identification strategies or handle endogeneity",
+                  label: "No causal reasoning",
+                  desc: "Can't identify or correct for endogeneity",
                 },
               ].map((item, i) => (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="flex gap-4 items-start"
+                  className="bg-[#2b1d14]/50 p-6 rounded-sm border border-[#fdfaf7]/5"
                   data-testid={`card-problem-${i}`}
                 >
-                  <item.icon className="w-5 h-5 text-[#a67c52] flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="text-[#fdfaf7] font-medium mb-1">
-                      {item.title}
-                    </h4>
-                    <p className="text-sm text-[#dcd2cc]/80">{item.desc}</p>
-                  </div>
+                  <item.icon className="w-5 h-5 text-[#a67c52] mb-4" />
+                  <h4 className="text-[#fdfaf7] font-medium mb-2">{item.label}</h4>
+                  <p className="text-sm text-[#dcd2cc]/70">{item.desc}</p>
                 </motion.div>
               ))}
             </div>
