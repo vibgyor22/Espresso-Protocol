@@ -186,22 +186,29 @@ const InferenceConsole = () => {
     },
   ];
 
+  const [hasCompleted, setHasCompleted] = useState(false);
+
   useEffect(() => {
-    if (!isPlaying) return;
-    if (currentStep >= steps.length - 1) return;
+    if (!isPlaying || hasCompleted) return;
+    if (currentStep >= steps.length - 1) {
+      setHasCompleted(true);
+      setIsPlaying(false);
+      return;
+    }
 
     const timer = setInterval(() => {
       setCurrentStep((prev) => {
         if (prev >= steps.length - 1) {
+          setHasCompleted(true);
           setIsPlaying(false);
           return prev;
         }
         return prev + 1;
       });
-    }, 1800);
+    }, 1200);
 
     return () => clearInterval(timer);
-  }, [isPlaying, currentStep, steps.length]);
+  }, [isPlaying, currentStep, steps.length, hasCompleted]);
 
   return (
     <div className="bg-[#1a1410] rounded-sm border border-[#3d2b1f]/30 overflow-hidden shadow-2xl">
@@ -325,6 +332,13 @@ const InferenceConsole = () => {
           />
         ))}
       </div>
+
+      {/* Disclaimer */}
+      <div className="bg-[#1a1410] px-4 py-3 border-t border-[#3d2b1f]/20">
+        <p className="text-[9px] text-center uppercase tracking-[0.15em] text-[#6f4e37]/70 font-mono">
+          Visual representation only — not a final product depiction
+        </p>
+      </div>
     </div>
   );
 };
@@ -422,6 +436,76 @@ const Landing = () => {
             The Problem
           </span>
 
+          {/* First Problem: Accessibility Gap */}
+          <div className="mb-24">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="max-w-3xl mb-12"
+            >
+              <h2
+                className="text-4xl md:text-5xl font-serif mb-8 text-[#fdfaf7]"
+                data-testid="text-problem-accessibility-headline"
+              >
+                Impactful research, limited by statistical barriers
+              </h2>
+              <p className="text-lg text-[#dcd2cc] leading-relaxed font-light">
+                Researchers across disciplines—public health, education, climate science, 
+                development economics—have domain expertise and meaningful data. But without 
+                deep statistical training, they're locked out of the very methods that could 
+                validate their most important findings.
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 gap-12">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="bg-[#2b1d14]/50 p-8 rounded-sm border border-[#fdfaf7]/5"
+                data-testid="card-problem-accessibility-1"
+              >
+                <h4 className="text-xl font-serif text-[#fdfaf7] mb-4">
+                  The expertise gap
+                </h4>
+                <p className="text-[#dcd2cc]/80 font-light leading-relaxed mb-4">
+                  Econometric methods—instrumental variables, difference-in-differences, 
+                  panel fixed effects—require years of specialized training. Most researchers 
+                  either outsource analysis or avoid rigorous causal claims entirely.
+                </p>
+                <p className="text-sm text-[#a67c52] font-medium">
+                  The result: Important questions go unanswered, or answers lack statistical rigor.
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="bg-[#2b1d14]/50 p-8 rounded-sm border border-[#fdfaf7]/5"
+                data-testid="card-problem-accessibility-2"
+              >
+                <h4 className="text-xl font-serif text-[#fdfaf7] mb-4">
+                  What Espresso enables
+                </h4>
+                <p className="text-[#dcd2cc]/80 font-light leading-relaxed mb-4">
+                  Validated results using your own data—statistically grounded, assumption-transparent, 
+                  and fully interrogable. Ask follow-up questions, understand why the model made 
+                  specific choices, and trust the methodology.
+                </p>
+                <p className="text-sm text-[#4a7c59] font-medium">
+                  Econometrics becomes accessible without becoming opaque.
+                </p>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-[#fdfaf7]/10 mb-24" />
+
+          {/* Second Problem: LLM Limitations */}
           <div className="grid md:grid-cols-2 gap-16 mb-24">
             <div>
               <h2
