@@ -98,247 +98,300 @@ const SubtleNumberTexture = ({
 };
 
 // Inference Console Component with animated workflow
+const AssumptionConfidence = () => (
+  <div className="mt-6">
+    <div className="text-[9px] uppercase tracking-widest text-[#6f4e37] mb-3">
+      Identification confidence
+    </div>
+
+    <div className="space-y-2">
+      {[
+        { label: "Stationarity", value: 0.9 },
+        { label: "Exogeneity", value: 0.75 },
+        { label: "Specification", value: 0.85 },
+        { label: "Inference robustness", value: 0.8 },
+      ].map((item, i) => (
+        <div key={i} className="flex items-center gap-4">
+          <span className="w-36 text-xs text-[#6f4e37]">{item.label}</span>
+          <div className="flex-1 h-1 bg-[#3d2b1f]/40">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${item.value * 100}%` }}
+              transition={{ duration: 0.8 }}
+              className="h-1 bg-[#4a7c59]"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const ModelDecisionFlow = () => (
+  <div className="mt-6 bg-[#1d1712] border border-[#3d2b1f]/30 px-5 py-4">
+    <div className="text-[9px] uppercase tracking-widest text-[#6f4e37] mb-4">
+      Model selection logic
+    </div>
+
+    <div className="space-y-3 text-xs">
+      <div className="flex items-center gap-3">
+        <div className="w-2 h-2 rounded-full bg-[#4a7c59]" />
+        <span className="text-[#dcd2cc]">Policy rate potentially endogenous</span>
+      </div>
+
+      <div className="flex items-center gap-3 pl-6">
+        <div className="w-px h-4 bg-[#6f4e37]/40" />
+        <span className="text-[#6f4e37]">Reverse causality risk detected</span>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <div className="w-2 h-2 rounded-full bg-[#4a7c59]" />
+        <span className="text-[#dcd2cc]">Valid external instrument available</span>
+      </div>
+
+      <div className="flex items-center gap-3 pl-6">
+        <div className="w-px h-4 bg-[#6f4e37]/40" />
+        <span className="text-[#6f4e37]">Strong first stage confirmed</span>
+      </div>
+
+      <div className="flex items-center gap-3 mt-2">
+        <div className="w-2 h-2 rounded-full bg-[#a67c52]" />
+        <span className="text-[#fdfaf7] font-medium">
+          Panel IV with fixed effects selected
+        </span>
+      </div>
+    </div>
+  </div>
+);
+
+const EffectInterpretation = () => (
+  <div className="mt-6 bg-[#1d1712] border border-[#3d2b1f]/30 px-5 py-4">
+    <div className="text-[9px] uppercase tracking-widest text-[#6f4e37] mb-4">
+      Interpreting the result
+    </div>
+
+    <div className="grid grid-cols-4 gap-3 text-xs text-[#dcd2cc]">
+      <div className="border-l border-[#6f4e37] pl-3">
+        Policy rate<br />
+        <span className="text-[#a67c52]">+100bp</span>
+      </div>
+
+      <div className="border-l border-[#6f4e37] pl-3">
+        Short run<br />
+        <span className="text-[#6f4e37]">Muted response</span>
+      </div>
+
+      <div className="border-l border-[#6f4e37] pl-3">
+        Medium run<br />
+        <span className="text-[#a67c52]">+0.34pp unemployment</span>
+      </div>
+
+      <div className="border-l border-[#6f4e37] pl-3">
+        Persistence<br />
+        <span className="text-[#6f4e37]">12 months</span>
+      </div>
+    </div>
+  </div>
+);
+
 const InferenceConsole = () => {
-  const consoleRef = useRef(null);
-  const isInView = useInView(consoleRef, { once: true, amount: 0.3 });
-  const [currentStep, setCurrentStep] = useState(0);
-  const [hasStarted, setHasStarted] = useState(false);
-  const [hasCompleted, setHasCompleted] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const isInView = useInView(wrapperRef, { once: true, amount: 0.45 });
+
+  const [step, setStep] = useState(0);
 
   const steps = [
     {
       type: "user",
-      content:
+      time: "14:32:01",
+      text:
         "What is the causal effect of raising interest rates on unemployment in the Eurozone?",
-      timestamp: "14:32:01",
     },
     {
       type: "system",
-      label: "DATA INGESTION",
-      content: "Loading ECB policy rates, Eurostat unemployment (2000-2024)...",
+      phase: "DATA INGESTION",
+      time: "14:32:02",
+      text:
+        "Loading ECB policy rates and Eurostat unemployment series",
       details: [
         "→ 288 monthly observations",
         "→ 19 member states panel",
-        "→ 4 control variables identified",
+        "→ Core macro controls identified",
       ],
-      timestamp: "14:32:02",
     },
     {
       type: "system",
-      label: "ASSUMPTIONS CHECK",
-      content: "Validating econometric assumptions...",
+      phase: "ASSUMPTIONS CHECK",
+      time: "14:32:04",
+      text:
+        "Validating econometric assumptions",
       details: [
-        "✓ Stationarity: ADF test passed (p < 0.01)",
-        "✓ No multicollinearity: VIF < 5 for all regressors",
-        "⚠ Heteroskedasticity detected → Robust SE enabled",
-        "✓ Lag structure: BIC suggests 4 lags optimal",
+        "✓ Stationarity confirmed via ADF tests",
+        "✓ No severe multicollinearity detected",
+        "⚠ Heteroskedasticity detected, robust SE enabled",
+        "✓ Lag length selected using BIC",
       ],
-      timestamp: "14:32:04",
     },
     {
       type: "system",
-      label: "MODEL SELECTION",
-      content: "Selecting appropriate specification...",
+      phase: "MODEL SELECTION",
+      time: "14:32:05",
+      text:
+        "Selecting appropriate causal specification",
       details: [
-        "→ Causal question detected: IV/2SLS recommended",
-        "→ Panel structure: Fixed effects for country heterogeneity",
-        "→ Time dynamics: Distributed lag model (4 quarters)",
-        "→ Instrument: US Fed funds rate (relevance F = 42.3)",
+        "→ Endogeneity detected",
+        "→ Panel IV with fixed effects selected",
+        "→ Instrument relevance confirmed",
       ],
-      timestamp: "14:32:05",
-    },
-    {
-      type: "system",
-      label: "ESTIMATION",
-      content: "Running Panel IV with fixed effects...",
-      timestamp: "14:32:06",
     },
     {
       type: "result",
-      label: "RESULTS",
-      content:
-        "A 100bp increase in ECB rates is associated with a 0.34pp rise in unemployment over 12 months.",
+      phase: "ESTIMATION RESULT",
+      time: "14:32:08",
+      text:
+        "A 100bp increase in policy rates raises unemployment by 0.34pp over 12 months",
       details: [
-        "Coefficient: 0.0034 (SE: 0.0008)",
+        "Coefficient: 0.0034",
+        "SE: 0.0008",
         "95% CI: [0.0018, 0.0050]",
-        "First-stage F: 42.3 (strong instrument)",
-        "Hansen J: 0.82 (p = 0.36, valid overid)",
       ],
       validation:
-        "Robustness: Result stable across 3 alternative specifications (±0.0006)",
-      timestamp: "14:32:08",
+        "Result stable across alternative specifications",
     },
     {
       type: "user",
-      content:
+      time: "14:32:45",
+      text:
         "What would unemployment look like if rates increased by 200bp next quarter?",
-      timestamp: "14:32:45",
     },
     {
       type: "result",
-      label: "FORECAST",
-      content: "Projected unemployment trajectory under 200bp rate hike:",
+      phase: "COUNTERFACTUAL FORECAST",
+      time: "14:32:47",
+      text:
+        "Projected unemployment trajectory under a 200bp hike",
       details: [
-        "Q1 2025: 6.4% → 6.5% (+0.1pp)",
-        "Q2 2025: 6.5% → 6.8% (+0.3pp)",
-        "Q3 2025: 6.8% → 7.2% (+0.4pp)",
-        "Q4 2025: 7.2% → 7.5% (+0.3pp)",
+        "Q1 2025: +0.1pp",
+        "Q2 2025: +0.3pp",
+        "Q3 2025: +0.4pp",
+        "Q4 2025: +0.3pp",
       ],
       validation:
-        "Prediction interval: ±0.4pp (68% CI). Model assumes no concurrent fiscal response.",
-      timestamp: "14:32:47",
+        "Prediction interval ±0.4pp under baseline assumptions",
     },
   ];
 
-  // Start animation when scrolled into view
   useEffect(() => {
-    if (isInView && !hasStarted) {
-      setHasStarted(true);
-    }
-  }, [isInView, hasStarted]);
+    if (!isInView) return;
+    if (step >= steps.length - 1) return;
 
-  // Run animation once, then stop
+    const current = steps[step];
+    const delay =
+      700 +
+      (current.text.length || 0) * 14 +
+      (current.details?.length || 0) * 280;
+
+    const t = setTimeout(() => setStep((s) => s + 1), delay);
+    return () => clearTimeout(t);
+  }, [isInView, step]);
+
   useEffect(() => {
-    if (!hasStarted || hasCompleted) return;
-    if (currentStep >= steps.length - 1) {
-      setHasCompleted(true);
-      return;
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-
-    const timer = setTimeout(() => {
-      setCurrentStep((prev) => prev + 1);
-    }, 1200);
-
-    return () => clearTimeout(timer);
-  }, [hasStarted, hasCompleted, currentStep, steps.length]);
+  }, [step]);
 
   return (
-    <div ref={consoleRef} className="bg-[#1a1410] rounded-sm border border-[#3d2b1f]/30 overflow-hidden shadow-2xl">
-      {/* Console Header */}
-      <div className="bg-[#2b1d14] px-4 py-3 flex items-center justify-between border-b border-[#3d2b1f]/20">
-        <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#6f4e37]" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#8b6914]" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#4a7c59]" />
+    <div ref={wrapperRef}>
+      <div className="bg-[#15110e] border border-[#3d2b1f]/40 shadow-[0_30px_120px_rgba(0,0,0,0.35)]">
+        <div className="px-6 py-4 border-b border-[#3d2b1f]/30 bg-[#1d1712]">
+          <span className="text-[9px] tracking-[0.4em] uppercase text-[#a67c52] font-mono">
+            Espresso Inference Console
+          </span>
         </div>
-        <span className="text-[9px] uppercase tracking-[0.3em] text-[#6f4e37] font-mono">
-          Espresso Inference Console
-        </span>
-        <div className="w-12" />
-      </div>
 
-      {/* Console Body */}
-      <div className="p-6 font-mono text-sm max-h-[500px] overflow-y-auto">
-        <AnimatePresence mode="wait">
-          {steps.slice(0, currentStep + 1).map((step, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className={`mb-6 ${i === currentStep ? "" : "opacity-60"}`}
-            >
-              {step.type === "user" ? (
-                <div className="flex gap-3">
-                  <MessageSquare className="w-4 h-4 text-[#a67c52] flex-shrink-0 mt-1" />
-                  <div>
-                    <div className="text-[8px] text-[#6f4e37] mb-1">
-                      [{step.timestamp}] USER
-                    </div>
-                    <p className="text-[#fdfaf7]">{step.content}</p>
-                  </div>
-                </div>
-              ) : step.type === "result" ? (
-                <div className="flex gap-3">
-                  <BarChart3 className="w-4 h-4 text-[#4a7c59] flex-shrink-0 mt-1" />
-                  <div className="flex-1">
-                    <div className="text-[8px] text-[#4a7c59] mb-1">
-                      [{step.timestamp}] {step.label}
-                    </div>
-                    <p className="text-[#fdfaf7] font-medium mb-3">
-                      {step.content}
-                    </p>
-                    {step.details && (
-                      <div className="bg-[#2b1d14] rounded px-3 py-2 mb-2">
-                        {step.details.map((detail, j) => (
-                          <div
-                            key={j}
-                            className="text-[#dcd2cc] text-xs py-0.5"
-                          >
-                            {detail}
-                          </div>
-                        ))}
+        <div
+          ref={scrollRef}
+          className="max-h-[540px] overflow-y-auto px-8 py-10 space-y-10 font-mono text-[14px] leading-relaxed"
+        >
+          {steps.slice(0, step + 1).map((s, i) => {
+            const active = i === step;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={active ? "opacity-100" : "opacity-50"}
+              >
+                {s.type === "user" && (
+                  <div className="flex gap-4">
+                    <MessageSquare className="w-4 h-4 text-[#a67c52] mt-1" />
+                    <div>
+                      <div className="text-[8px] text-[#6f4e37] mb-2">
+                        [{s.time}] USER QUERY
                       </div>
-                    )}
-                    {step.validation && (
-                      <div className="flex items-start gap-2 text-xs text-[#8b6914]">
-                        <Check className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                        <span>{step.validation}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex gap-3">
-                  <Cpu className="w-4 h-4 text-[#6f4e37] flex-shrink-0 mt-1" />
-                  <div className="flex-1">
-                    <div className="text-[8px] text-[#6f4e37] mb-1">
-                      [{step.timestamp}] {step.label}
+                      <div className="text-[#fdfaf7]">{s.text}</div>
                     </div>
-                    <p className="text-[#dcd2cc] mb-2">{step.content}</p>
-                    {step.details && (
-                      <div className="pl-2 border-l border-[#3d2b1f]/30">
-                        {step.details.map((detail, j) => (
-                          <div
-                            key={j}
-                            className={`text-xs py-0.5 ${
-                              detail.startsWith("✓")
-                                ? "text-[#4a7c59]"
-                                : detail.startsWith("⚠")
+                  </div>
+                )}
+
+                {s.type !== "user" && (
+                  <div className="flex gap-4">
+                    <Cpu className="w-4 h-4 text-[#6f4e37] mt-1" />
+                    <div className="flex-1">
+                      <div className="text-[8px] text-[#6f4e37] mb-2">
+                        [{s.time}] {s.phase}
+                      </div>
+
+                      <div className="text-[#dcd2cc] mb-3">{s.text}</div>
+
+                      {s.details && (
+                        <div className="pl-4 border-l border-[#3d2b1f]/40 space-y-1">
+                          {s.details.map((d, j) => (
+                            <div
+                              key={j}
+                              className={`text-xs ${
+                                d.startsWith("✓")
+                                  ? "text-[#4a7c59]"
+                                  : d.startsWith("⚠")
                                   ? "text-[#8b6914]"
                                   : "text-[#6f4e37]"
-                            }`}
-                          >
-                            {detail}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                              }`}
+                            >
+                              {d}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {s.phase === "ASSUMPTIONS CHECK" && <AssumptionConfidence />}
+                      {s.phase === "MODEL SELECTION" && <ModelDecisionFlow />}
+                      {s.phase === "ESTIMATION RESULT" && <EffectInterpretation />}
+
+                      {s.validation && (
+                        <div className="mt-3 flex gap-2 text-xs text-[#8b6914]">
+                          <Check className="w-3 h-3 mt-0.5" />
+                          <span>{s.validation}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </motion.div>
-          ))}
-        </AnimatePresence>
+                )}
+              </motion.div>
+            );
+          })}
 
-        {/* Blinking cursor */}
-        <motion.span
-          animate={{ opacity: [1, 0] }}
-          transition={{ duration: 0.8, repeat: Infinity }}
-          className="inline-block w-2 h-4 bg-[#a67c52] ml-1"
-        />
-      </div>
-
-      {/* Progress indicator */}
-      <div className="bg-[#2b1d14] px-4 py-2 flex gap-1">
-        {steps.map((_, i) => (
-          <div
-            key={i}
-            className={`h-1 flex-1 rounded-full transition-colors ${i <= currentStep ? "bg-[#6f4e37]" : "bg-[#3d2b1f]/30"}`}
+          <motion.div
+            animate={{ opacity: [1, 0] }}
+            transition={{ duration: 0.9, repeat: Infinity }}
+            className="w-2 h-4 bg-[#a67c52]"
           />
-        ))}
-      </div>
-
-      {/* Disclaimer */}
-      <div className="bg-[#1a1410] px-4 py-3 border-t border-[#3d2b1f]/20">
-        <p className="text-[9px] text-center uppercase tracking-[0.15em] text-[#6f4e37]/70 font-mono">
-          Visual representation only — not a final product depiction
-        </p>
+        </div>
       </div>
     </div>
   );
 };
-
 const Landing = () => {
   return (
     <div className="bg-[#fdfaf7] text-[#3d2b1f] selection:bg-[#6f4e37] selection:text-white font-sans antialiased overflow-x-hidden">
@@ -407,11 +460,17 @@ const Landing = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-8 mt-12">
               <Button
-                variant="outline"
-                className="rounded-none border-[#3d2b1f] bg-transparent text-[#3d2b1f] hover:bg-[#3d2b1f] hover:text-[#fdfaf7] px-10 py-7 text-[10px] uppercase tracking-[0.2em] h-auto transition-all duration-500"
-                data-testid="button-explore-concept"
-              >
-                Read the Whitepaper
+                  asChild
+                  variant="outline"
+                  className="rounded-none border-[#3d2b1f] bg-transparent text-[#3d2b1f] hover:bg-[#3d2b1f] hover:text-[#fdfaf7] px-10 py-7 text-[10px] uppercase tracking-[0.2em] h-auto transition-all duration-500"
+                >
+                  <a href="https://drive.google.com/file/d/13FVH6T-WDdhPWsqJ1SHIvJOWJNVzr5un/view?usp=drivesdk"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Read the Whitepaper
+                  </a>
+                
               </Button>
             </div>
           </motion.div>
@@ -834,8 +893,8 @@ const Landing = () => {
               See the reasoning, not just the answer
             </h2>
             <p className="text-xl text-[#6f4e37] font-light max-w-2xl">
-              Watch how Espresso processes a real macroeconomic policy
-              question—from data ingestion through model selection to validated
+              Watch how Espresso could process macroeconomic policy
+              question - from data ingestion through model selection to validated
               results.
             </p>
           </div>
@@ -905,6 +964,7 @@ const Landing = () => {
               </div>
               <p className="text-[10px] uppercase tracking-[0.4em] text-[#6f4e37]">
                 © 2026 Under Development
+                <br></br>By Vibhor Vanvani
               </p>
             </div>
           </div>
