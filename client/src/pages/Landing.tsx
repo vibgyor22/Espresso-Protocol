@@ -17,7 +17,78 @@ import {
   MessageSquare,
   TrendingUp,
 } from "lucide-react";
+const AnalyticalBackground = ({
+  theme = "light",
+}: {
+  theme?: "light" | "dark";
+}) => {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
 
+  const ySlow = useTransform(scrollYProgress, [0, 1], ["0%", "4%"]);
+  const ySlower = useTransform(scrollYProgress, [0, 1], ["0%", "2%"]);
+
+  const palette =
+    theme === "dark"
+      ? {
+          numbers: "text-[#fdfaf7]/10",
+          bands: "bg-[#6f4e37]/15",
+          grid: "border-[#fdfaf7]/10",
+        }
+      : {
+          numbers: "text-[#3d2b1f]/10",
+          bands: "bg-[#6f4e37]/12",
+          grid: "border-[#3d2b1f]/10",
+        };
+
+  const numbers = useMemo(
+    () =>
+      Array.from({ length: 7 }).map(() =>
+        Array.from({ length: 28 }).map(() =>
+          Math.floor(Math.random() * 1000000)
+            .toString()
+            .padStart(6, "0"),
+        ),
+      ),
+    [],
+  );
+
+  return (
+    <div ref={ref} className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Numeric columns */}
+      <motion.div
+        style={{ y: ySlower }}
+        className={`absolute inset-0 flex justify-between px-24 font-mono text-[9px] ${palette.numbers}`}
+      >
+        {numbers.map((col, i) => (
+          <div key={i} className="flex flex-col gap-2 opacity-70">
+            {col.map((n, j) => (
+              <span key={j}>{n}</span>
+            ))}
+          </div>
+        ))}
+      </motion.div>
+
+      {/* Confidence bands */}
+      <motion.div style={{ y: ySlow }} className="absolute inset-0">
+        <div className="absolute top-1/3 left-0 right-0 h-16 opacity-40">
+          <div className={`h-full ${palette.bands}`} />
+        </div>
+        <div className="absolute top-2/3 left-0 right-0 h-10 opacity-30">
+          <div className={`h-full ${palette.bands}`} />
+        </div>
+      </motion.div>
+
+      {/* Axis grid */}
+      <div
+        className={`absolute inset-0 border-t border-l ${palette.grid}`}
+      />
+    </div>
+  );
+};
 const ParallaxSection = ({
   children,
   speed = 0.5,
@@ -136,7 +207,9 @@ const ModelDecisionFlow = () => (
     <div className="space-y-3 text-xs">
       <div className="flex items-center gap-3">
         <div className="w-2 h-2 rounded-full bg-[#4a7c59]" />
-        <span className="text-[#dcd2cc]">Policy rate potentially endogenous</span>
+        <span className="text-[#dcd2cc]">
+          Policy rate potentially endogenous
+        </span>
       </div>
 
       <div className="flex items-center gap-3 pl-6">
@@ -146,7 +219,9 @@ const ModelDecisionFlow = () => (
 
       <div className="flex items-center gap-3">
         <div className="w-2 h-2 rounded-full bg-[#4a7c59]" />
-        <span className="text-[#dcd2cc]">Valid external instrument available</span>
+        <span className="text-[#dcd2cc]">
+          Valid external instrument available
+        </span>
       </div>
 
       <div className="flex items-center gap-3 pl-6">
@@ -172,22 +247,26 @@ const EffectInterpretation = () => (
 
     <div className="grid grid-cols-4 gap-3 text-xs text-[#dcd2cc]">
       <div className="border-l border-[#6f4e37] pl-3">
-        Policy rate<br />
+        Policy rate
+        <br />
         <span className="text-[#a67c52]">+100bp</span>
       </div>
 
       <div className="border-l border-[#6f4e37] pl-3">
-        Short run<br />
+        Short run
+        <br />
         <span className="text-[#6f4e37]">Muted response</span>
       </div>
 
       <div className="border-l border-[#6f4e37] pl-3">
-        Medium run<br />
+        Medium run
+        <br />
         <span className="text-[#a67c52]">+0.34pp unemployment</span>
       </div>
 
       <div className="border-l border-[#6f4e37] pl-3">
-        Persistence<br />
+        Persistence
+        <br />
         <span className="text-[#6f4e37]">12 months</span>
       </div>
     </div>
@@ -205,15 +284,13 @@ const InferenceConsole = () => {
     {
       type: "user",
       time: "14:32:01",
-      text:
-        "What is the causal effect of raising interest rates on unemployment in the Eurozone?",
+      text: "What is the causal effect of raising interest rates on unemployment in the Eurozone?",
     },
     {
       type: "system",
       phase: "DATA INGESTION",
       time: "14:32:02",
-      text:
-        "Loading ECB policy rates and Eurostat unemployment series",
+      text: "Loading ECB policy rates and Eurostat unemployment series",
       details: [
         "→ 288 monthly observations",
         "→ 19 member states panel",
@@ -224,8 +301,7 @@ const InferenceConsole = () => {
       type: "system",
       phase: "ASSUMPTIONS CHECK",
       time: "14:32:04",
-      text:
-        "Validating econometric assumptions",
+      text: "Validating econometric assumptions",
       details: [
         "✓ Stationarity confirmed via ADF tests",
         "✓ No severe multicollinearity detected",
@@ -237,8 +313,7 @@ const InferenceConsole = () => {
       type: "system",
       phase: "MODEL SELECTION",
       time: "14:32:05",
-      text:
-        "Selecting appropriate causal specification",
+      text: "Selecting appropriate causal specification",
       details: [
         "→ Endogeneity detected",
         "→ Panel IV with fixed effects selected",
@@ -249,36 +324,31 @@ const InferenceConsole = () => {
       type: "result",
       phase: "ESTIMATION RESULT",
       time: "14:32:08",
-      text:
-        "A 100bp increase in policy rates raises unemployment by 0.34pp over 12 months",
+      text: "A 100bp increase in policy rates raises unemployment by 0.34pp over 12 months",
       details: [
         "Coefficient: 0.0034",
         "SE: 0.0008",
         "95% CI: [0.0018, 0.0050]",
       ],
-      validation:
-        "Result stable across alternative specifications",
+      validation: "Result stable across alternative specifications",
     },
     {
       type: "user",
       time: "14:32:45",
-      text:
-        "What would unemployment look like if rates increased by 200bp next quarter?",
+      text: "What would unemployment look like if rates increased by 200bp next quarter?",
     },
     {
       type: "result",
       phase: "COUNTERFACTUAL FORECAST",
       time: "14:32:47",
-      text:
-        "Projected unemployment trajectory under a 200bp hike",
+      text: "Projected unemployment trajectory under a 200bp hike",
       details: [
         "Q1 2025: +0.1pp",
         "Q2 2025: +0.3pp",
         "Q3 2025: +0.4pp",
         "Q4 2025: +0.3pp",
       ],
-      validation:
-        "Prediction interval ±0.4pp under baseline assumptions",
+      validation: "Prediction interval ±0.4pp under baseline assumptions",
     },
   ];
 
@@ -355,8 +425,8 @@ const InferenceConsole = () => {
                                 d.startsWith("✓")
                                   ? "text-[#4a7c59]"
                                   : d.startsWith("⚠")
-                                  ? "text-[#8b6914]"
-                                  : "text-[#6f4e37]"
+                                    ? "text-[#8b6914]"
+                                    : "text-[#6f4e37]"
                               }`}
                             >
                               {d}
@@ -365,9 +435,13 @@ const InferenceConsole = () => {
                         </div>
                       )}
 
-                      {s.phase === "ASSUMPTIONS CHECK" && <AssumptionConfidence />}
+                      {s.phase === "ASSUMPTIONS CHECK" && (
+                        <AssumptionConfidence />
+                      )}
                       {s.phase === "MODEL SELECTION" && <ModelDecisionFlow />}
-                      {s.phase === "ESTIMATION RESULT" && <EffectInterpretation />}
+                      {s.phase === "ESTIMATION RESULT" && (
+                        <EffectInterpretation />
+                      )}
 
                       {s.validation && (
                         <div className="mt-3 flex gap-2 text-xs text-[#8b6914]">
@@ -460,17 +534,17 @@ const Landing = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-8 mt-12">
               <Button
-                  asChild
-                  variant="outline"
-                  className="rounded-none border-[#3d2b1f] bg-transparent text-[#3d2b1f] hover:bg-[#3d2b1f] hover:text-[#fdfaf7] px-10 py-7 text-[10px] uppercase tracking-[0.2em] h-auto transition-all duration-500"
+                asChild
+                variant="outline"
+                className="rounded-none border-[#3d2b1f] bg-transparent text-[#3d2b1f] hover:bg-[#3d2b1f] hover:text-[#fdfaf7] px-10 py-7 text-[10px] uppercase tracking-[0.2em] h-auto transition-all duration-500"
+              >
+                <a
+                  href="https://drive.google.com/file/d/13FVH6T-WDdhPWsqJ1SHIvJOWJNVzr5un/view?usp=drivesdk"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <a href="https://drive.google.com/file/d/13FVH6T-WDdhPWsqJ1SHIvJOWJNVzr5un/view?usp=drivesdk"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Read the Whitepaper
-                  </a>
-                
+                  Read the Whitepaper
+                </a>
               </Button>
             </div>
           </motion.div>
@@ -501,10 +575,17 @@ const Landing = () => {
                 className="text-4xl md:text-5xl font-serif mb-6 text-[#fdfaf7]"
                 data-testid="text-problem-accessibility-headline"
               >
-                You have the data. You know the question.<br />
-                <span className="text-[#a67c52]">The statistics shouldn't stop you.</span>
+                You have the data. You know the question.
+                <br />
+                <span className="text-[#a67c52]">
+                  The statistics shouldn't stop you.
+                </span>
               </h2>
-              <p className="text-xl text-[#dcd2cc] leading-relaxed font-light">Researchers with real-world impact in health, policy, finance, climate shouldn't need a PhD in econometrics to get statistically valid answers.</p>
+              <p className="text-xl text-[#dcd2cc] leading-relaxed font-light">
+                Researchers with real-world impact in health, policy, finance,
+                climate shouldn't need a PhD in econometrics to get
+                statistically valid answers.
+              </p>
             </motion.div>
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -515,8 +596,14 @@ const Landing = () => {
                 className="bg-[#2b1d14]/50 p-8 rounded-sm border border-[#fdfaf7]/5"
                 data-testid="card-problem-accessibility-1"
               >
-                <p className="text-[#a67c52] text-sm uppercase tracking-widest mb-4 font-medium">Today</p>
-                <p className="text-[#fdfaf7] text-lg font-light leading-relaxed">Instrumental Variables, DiD, panel models - years to learn, easy to misapply. Most researchers either outsource or skip rigorous analysis entirely.</p>
+                <p className="text-[#a67c52] text-sm uppercase tracking-widest mb-4 font-medium">
+                  Today
+                </p>
+                <p className="text-[#fdfaf7] text-lg font-light leading-relaxed">
+                  Instrumental Variables, DiD, panel models - years to learn,
+                  easy to misapply. Most researchers either outsource or skip
+                  rigorous analysis entirely.
+                </p>
               </motion.div>
 
               <motion.div
@@ -527,9 +614,11 @@ const Landing = () => {
                 className="bg-[#2b1d14]/50 p-8 rounded-sm border border-[#fdfaf7]/5"
                 data-testid="card-problem-accessibility-2"
               >
-                <p className="text-[#4a7c59] text-sm uppercase tracking-widest mb-4 font-medium">With Espresso</p>
+                <p className="text-[#4a7c59] text-sm uppercase tracking-widest mb-4 font-medium">
+                  With Espresso
+                </p>
                 <p className="text-[#fdfaf7] text-lg font-light leading-relaxed">
-                  Bring your data. Ask your question. Get validated results with 
+                  Bring your data. Ask your question. Get validated results with
                   transparent assumptions you can actually interrogate.
                 </p>
               </motion.div>
@@ -551,15 +640,19 @@ const Landing = () => {
                 className="text-4xl md:text-5xl font-serif mb-6 text-[#fdfaf7]"
                 data-testid="text-problem-headline"
               >
-                LLMs sound confident.<br />
-                <span className="text-[#a67c52]">But they can't do statistics.</span>
+                LLMs sound confident.
+                <br />
+                <span className="text-[#a67c52]">
+                  But they can't do statistics.
+                </span>
               </h2>
               <p className="text-xl text-[#dcd2cc] leading-relaxed font-light">
-                They hallucinate p-values, invent coefficients, and confuse correlation with causation. 
-                For real econometric analysis, you need real computation.
+                They hallucinate p-values, invent coefficients, and confuse
+                correlation with causation. For real econometric analysis, you
+                need real computation.
               </p>
             </motion.div>
-            
+
             <div className="grid md:grid-cols-3 gap-6">
               {[
                 {
@@ -588,7 +681,9 @@ const Landing = () => {
                   data-testid={`card-problem-${i}`}
                 >
                   <item.icon className="w-5 h-5 text-[#a67c52] mb-4" />
-                  <h4 className="text-[#fdfaf7] font-medium mb-2">{item.label}</h4>
+                  <h4 className="text-[#fdfaf7] font-medium mb-2">
+                    {item.label}
+                  </h4>
                   <p className="text-sm text-[#dcd2cc]/70">{item.desc}</p>
                 </motion.div>
               ))}
@@ -893,9 +988,8 @@ const Landing = () => {
               See the reasoning, not just the answer
             </h2>
             <p className="text-xl text-[#6f4e37] font-light max-w-2xl">
-              Watch how Espresso could process macroeconomic policy
-              question - from data ingestion through model selection to validated
-              results.
+              Watch how Espresso could process macroeconomic policy question -
+              from data ingestion through model selection to validated results.
             </p>
           </div>
 
