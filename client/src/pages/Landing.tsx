@@ -378,7 +378,6 @@ const Landing = () => {
           </a>
         </div>
       </nav>
-
       {/* Hero Section */}
       <ParallaxSection speed={0.1} className="bg-[#fdfaf7]">
         <div className="max-w-4xl">
@@ -418,7 +417,6 @@ const Landing = () => {
           </motion.div>
         </div>
       </ParallaxSection>
-
       {/* Problem Statement Section */}
       <section
         id="problem"
@@ -447,10 +445,7 @@ const Landing = () => {
                 You have the data. You know the question.<br />
                 <span className="text-[#a67c52]">The statistics shouldn't stop you.</span>
               </h2>
-              <p className="text-xl text-[#dcd2cc] leading-relaxed font-light">
-                Researchers with real-world impact—in health, policy, climate—shouldn't 
-                need a PhD in econometrics to get statistically valid answers.
-              </p>
+              <p className="text-xl text-[#dcd2cc] leading-relaxed font-light">Researchers with real-world impact in health, policy, finance, climate shouldn't need a PhD in econometrics to get statistically valid answers.</p>
             </motion.div>
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -587,7 +582,6 @@ const Landing = () => {
           </div>
         </div>
       </section>
-
       {/* Use Cases */}
       <section id="cases" className="bg-[#fdfaf7] py-48 px-6 md:px-24 relative">
         <div className="max-w-6xl mx-auto relative z-10">
@@ -636,7 +630,6 @@ const Landing = () => {
           </div>
         </div>
       </section>
-
       {/* Architecture / Vision */}
       <ParallaxSection
         id="vision"
@@ -669,7 +662,6 @@ const Landing = () => {
           </div>
         </div>
       </ParallaxSection>
-
       {/* How It Works */}
       <div id="process" className="bg-[#fdfaf7]">
         {/* The Grind */}
@@ -828,7 +820,6 @@ const Landing = () => {
           </div>
         </ParallaxSection>
       </div>
-
       {/* Inference Console Showcase */}
       <section
         id="console"
@@ -877,7 +868,6 @@ const Landing = () => {
           </div>
         </div>
       </section>
-
       {/* Impact */}
       <ParallaxSection
         id="impact"
@@ -901,7 +891,6 @@ const Landing = () => {
           </p>
         </div>
       </ParallaxSection>
-
       {/* Footer */}
       <footer className="bg-[#fdfaf7] py-48 px-6 md:px-24">
         <div className="max-w-6xl mx-auto flex flex-col items-center">
