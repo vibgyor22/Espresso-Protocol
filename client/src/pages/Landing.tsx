@@ -457,10 +457,7 @@ const Landing = () => {
                 data-testid="card-problem-accessibility-1"
               >
                 <p className="text-[#a67c52] text-sm uppercase tracking-widest mb-4 font-medium">Today</p>
-                <p className="text-[#fdfaf7] text-lg font-light leading-relaxed">
-                  IV, DiD, panel models—years to learn, easy to misapply. 
-                  Most researchers either outsource or skip rigorous analysis entirely.
-                </p>
+                <p className="text-[#fdfaf7] text-lg font-light leading-relaxed">Instrumental Variables, DiD, panel models - years to learn, easy to misapply. Most researchers either outsource or skip rigorous analysis entirely.</p>
               </motion.div>
 
               <motion.div
