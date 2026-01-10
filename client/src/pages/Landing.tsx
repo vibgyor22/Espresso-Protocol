@@ -411,7 +411,7 @@ const Landing = () => {
                 className="rounded-none border-[#3d2b1f] bg-transparent text-[#3d2b1f] hover:bg-[#3d2b1f] hover:text-[#fdfaf7] px-10 py-7 text-[10px] uppercase tracking-[0.2em] h-auto transition-all duration-500"
                 data-testid="button-explore-concept"
               >
-                Explore the concept
+                Read the Whitepaper
               </Button>
             </div>
           </motion.div>
