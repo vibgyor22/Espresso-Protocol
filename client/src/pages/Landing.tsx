@@ -57,7 +57,10 @@ const AnalyticalBackground = ({
   );
 
   return (
-    <div ref={ref} className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div
+      ref={ref}
+      className="absolute inset-0 overflow-hidden pointer-events-none"
+    >
       {/* Numeric columns */}
       <motion.div
         style={{ y: ySlower }}
@@ -83,9 +86,7 @@ const AnalyticalBackground = ({
       </motion.div>
 
       {/* Axis grid */}
-      <div
-        className={`absolute inset-0 border-t border-l ${palette.grid}`}
-      />
+      <div className={`absolute inset-0 border-t border-l ${palette.grid}`} />
     </div>
   );
 };
@@ -623,6 +624,35 @@ const Landing = () => {
                 </p>
               </motion.div>
             </div>
+
+            {/* Reproducibility Statistics */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="mt-12 flex flex-col md:flex-row gap-4"
+            >
+              <div className="flex-1 bg-[#241a12] border-l-2 border-[#a67c52] px-5 py-4">
+                <div className="text-[#a67c52] text-2xl font-serif font-medium mb-1">
+                  ~70%
+                </div>
+                <p className="text-[#dcd2cc]/80 text-sm leading-relaxed">
+                  of papers fail reproducibility due to broken data pipelines—missing raw data, undocumented cleaning steps, version conflicts.
+                </p>
+              </div>
+              <div className="flex-1 bg-[#241a12] border-l-2 border-[#a67c52] px-5 py-4">
+                <div className="text-[#a67c52] text-2xl font-serif font-medium mb-1">
+                  49%
+                </div>
+                <p className="text-[#dcd2cc]/80 text-sm leading-relaxed">
+                  of reproduced papers show 2+ point spread on a 10-point reproducibility scale (avg. gap: 2.9 points between assessors).
+                </p>
+              </div>
+            </motion.div>
+            <p className="mt-3 text-[10px] text-[#6f4e37] tracking-wide">
+              Source: NBER Working Paper 33753 — 411 reproductions of 330 economics papers from top journals
+            </p>
           </div>
 
           {/* Divider */}
