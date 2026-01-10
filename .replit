@@ -60,3 +60,6 @@ waitForPort = 5000
 
 [agent]
 mockupState = "MOCKUP"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-17621222-4b18-4dcb-acf9-b1870f5e96ac"
