@@ -473,7 +473,7 @@ const Landing = () => {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-gradient-to-b from-[#fdfaf7] to-transparent">
         <div className="font-serif text-xl font-bold tracking-tight text-[#3d2b1f]">
-          Espresso Protocol
+          Espresso
         </div>
         <div className="hidden md:flex gap-8 text-[10px] uppercase tracking-[0.2em] font-medium text-[#6f4e37]">
           <a
@@ -529,7 +529,7 @@ const Landing = () => {
               className="text-xl md:text-2xl font-light text-[#6f4e37] mb-6 max-w-2xl leading-relaxed"
               data-testid="text-hero-subheadline"
             >
-              Espresso Protocol is being built to let users interact with data
+              Espresso is being built to let users interact with data
               through statistically grounded econometric models, producing
               results that are reliable, traceable, and open to questioning.
             </p>
@@ -722,7 +722,7 @@ const Landing = () => {
 
           <div className="border-t border-[#fdfaf7]/10 pt-16">
             <h3 className="text-2xl font-serif text-[#fdfaf7] mb-8">
-              What Espresso Protocol addresses
+              What Espresso addresses
             </h3>
             <div className="grid md:grid-cols-3 gap-8">
               {[
@@ -836,7 +836,7 @@ const Landing = () => {
           </h2>
           <div className="space-y-8 text-[#6f4e37] text-xl font-light leading-relaxed">
             <p>
-              Espresso Protocol is designed to standardize how econometric
+              Espresso is designed to standardize how econometric
               models are selected, validated, and interpreted, while allowing
               users to interact with those models directly.
             </p>
@@ -1066,7 +1066,7 @@ const Landing = () => {
           </p>
           <p className="text-xl md:text-2xl text-[#6f4e37] font-light leading-relaxed max-w-3xl mx-auto">
             By combining rigorous econometrics with an interactive inference
-            layer, Espresso Protocol aims to make reliable inference easier to
+            layer, Espresso aims to make reliable inference easier to
             use, easier to question, and harder to misuse.
           </p>
         </div>
@@ -1078,13 +1078,13 @@ const Landing = () => {
             className="text-center font-serif text-3xl md:text-5xl text-[#3d2b1f] mb-24 max-w-3xl leading-snug"
             data-testid="text-closing-line"
           >
-            Espresso Protocol is an ongoing effort to make econometric inference
+            Espresso is an ongoing effort to make econometric inference
             reliable, interactive, and usable.
           </p>
           <div className="flex flex-col md:flex-row justify-between w-full pt-32 border-t border-[#e5e0dd] gap-16">
             <div>
               <div className="font-serif text-2xl font-bold text-[#3d2b1f] mb-4">
-                Espresso Protocol
+                Espresso
               </div>
               <p className="text-[10px] uppercase tracking-[0.4em] text-[#6f4e37]">
                 © 2026 Under Development
