@@ -540,12 +540,13 @@ const Landing = () => {
                 className="rounded-none border-[#3d2b1f] bg-transparent text-[#3d2b1f] hover:bg-[#3d2b1f] hover:text-[#fdfaf7] px-10 py-7 text-[10px] uppercase tracking-[0.2em] h-auto transition-all duration-500"
               >
                 <a
-                  href="https://drive.google.com/file/d/13FVH6T-WDdhPWsqJ1SHIvJOWJNVzr5un/view?usp=drivesdk"
+                  href="/whitepaper.pdf"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   Read the Whitepaper
                 </a>
+
               </Button>
             </div>
           </motion.div>
