@@ -359,9 +359,9 @@ const InferenceConsole = () => {
 
     const current = steps[step];
     const delay =
-      900 +
-      (current.text.length || 0) * 40 +
-      (current.details?.length || 0) * 400;
+      800 +
+      (current.text.length || 0) * 25 +
+      (current.details?.length || 0) * 300;
 
     const t = setTimeout(() => setStep((s) => s + 1), delay);
     return () => clearTimeout(t);
