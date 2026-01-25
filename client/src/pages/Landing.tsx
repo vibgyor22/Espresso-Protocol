@@ -514,7 +514,7 @@ const Landing = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-            className="text-3xl md:text-5xl font-serif font-medium leading-[1.1] mb-12 text-[#3d2b1f]"
+            className="text-4xl md:text-6xl font-serif font-medium leading-[1.1] mb-12 text-[#3d2b1f]"
             data-testid="text-hero-headline"
           >
             Democratizing Statistical Inference
