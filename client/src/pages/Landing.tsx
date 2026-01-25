@@ -517,7 +517,7 @@ const Landing = () => {
             className="text-5xl md:text-8xl font-serif font-medium leading-[1.1] mb-12 text-[#3d2b1f]"
             data-testid="text-hero-headline"
           >
-            Econometrics you can interrogate
+            Democratizing Statistical Inference
           </motion.h1>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
