@@ -158,12 +158,32 @@ def _linear_regression_result(model, y, X, main_index=1, se_type='HC1 robust',
 
 def _prepare_time_series(data, outcome_col, time_col, unit_col=None):
     """Clean, aggregate if needed, and sort data into a single time series."""
+    # Guard: don't use outcome column as its own unit grouper
+    if unit_col and unit_col == outcome_col:
+        unit_col = None
     cols = [time_col, outcome_col]
     if unit_col and unit_col in data.columns:
         cols.append(unit_col)
     df = data[cols].copy().dropna()
     df[outcome_col] = pd.to_numeric(df[outcome_col], errors='coerce')
-    df[time_col] = pd.to_numeric(df[time_col], errors='coerce')
+    # Handle datetime types: extract year to produce a human-readable numeric time axis.
+    # Cases to handle:
+    #   1. datetime64 column: pd.to_numeric returns nanosecond epoch (unusable) → extract year
+    #   2. Date strings like '2000-01-01': pd.to_numeric returns all-NaN → parse and extract year
+    #   3. Plain numeric years like 2000: pd.to_numeric returns correctly → use as-is
+    if pd.api.types.is_datetime64_any_dtype(df[time_col]):
+        time_as_num = df[time_col].dt.year.astype(float)
+    else:
+        time_as_num = pd.to_numeric(df[time_col], errors='coerce')
+        if time_as_num.isna().all():
+            # Probably a date string — try parsing as datetime and extract year
+            try:
+                parsed_dt = pd.to_datetime(df[time_col], errors='coerce')
+                if not parsed_dt.isna().all():
+                    time_as_num = parsed_dt.dt.year.astype(float)
+            except Exception:
+                pass
+    df[time_col] = time_as_num
     df = df.dropna()
     if unit_col and unit_col in df.columns:
         df = df.groupby(time_col, as_index=False)[outcome_col].mean()
@@ -188,13 +208,30 @@ def run_arima(data, outcome_col, time_col, unit_col=None, forecast_periods=10):
     is requested.
     """
     try:
+        # Guard: if unit_col is the same column as outcome_col, ignore it
+        # (LLM sometimes maps a numeric outcome as the unit identifier).
+        if unit_col and unit_col == outcome_col:
+            unit_col = None
         cols = [time_col, outcome_col]
         if unit_col and unit_col in data.columns:
             cols.append(unit_col)
         df = data[cols].copy().dropna()
 
         df[outcome_col] = pd.to_numeric(df[outcome_col], errors='coerce')
-        df[time_col] = pd.to_numeric(df[time_col], errors='coerce')
+        # Handle datetime types: extract year to produce human-readable numeric time axis.
+        # datetime64 columns yield nanosecond epoch values from pd.to_numeric (unusable).
+        if pd.api.types.is_datetime64_any_dtype(df[time_col]):
+            time_as_num = df[time_col].dt.year.astype(float)
+        else:
+            time_as_num = pd.to_numeric(df[time_col], errors='coerce')
+            if time_as_num.isna().all():
+                try:
+                    parsed_dt = pd.to_datetime(df[time_col], errors='coerce')
+                    if not parsed_dt.isna().all():
+                        time_as_num = parsed_dt.dt.year.astype(float)
+                except Exception:
+                    pass
+        df[time_col] = time_as_num
         df = df.dropna()
 
         if unit_col and unit_col in df.columns:

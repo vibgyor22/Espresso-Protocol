@@ -207,6 +207,19 @@ class Coordinator:
         # 4) Select model
         sel = T.select_model(intent, self.s.df, override=self.s.overrides.get("model"))
 
+        # Auto-reframe: association/causal with no treatment → try forecast if a time column exists
+        if sel.get("error") and not intent.get("treatment") and intent.get("time") and intent.get("outcome") and not self.s.overrides.get("model"):
+            self._emit("reframe_question", {},
+                       preview="no predictor → forecast",
+                       why=(
+                           "The question asks about one variable over time without a predictor. "
+                           "Switching to a time-series forecast, which is the right model for "
+                           "'how has X evolved' or 'what is the trajectory of X' questions."
+                       ))
+            intent["question_type"] = "forecast"
+            self.s.intent = intent
+            sel = T.select_model(intent, self.s.df)
+
         # Auto-reframe: causal_effect with no admissible model → try association
         if sel.get("error") and intent.get("question_type") == "causal_effect" and not self.s.overrides.get("model"):
             self._emit("reframe_question", {},

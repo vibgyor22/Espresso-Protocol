@@ -139,7 +139,7 @@ def _looks_like_date_string(series: pd.Series) -> bool:
         sample = series.dropna().astype(str).head(10)
         if sample.empty:
             return False
-        parsed = pd.to_datetime(sample, errors="coerce")
+        parsed = pd.to_datetime(sample, format="mixed", errors="coerce")
         return parsed.notna().mean() >= 0.8
     except Exception:
         return False

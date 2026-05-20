@@ -119,13 +119,33 @@ def prepare_data(df: pd.DataFrame, mapping: dict, intent: dict) -> tuple[pd.Data
     outcome_val = _get_col(mapping.get("outcome"))
     treatment_val = _get_col(mapping.get("treatment"))
 
-    if mapping.get("pivot") or isinstance(_get_col(mapping.get("time")), list):
+    # Auto-detect wide-format datasets even when LLM mapping didn't set pivot=True.
+    # A wide-format dataset has many year-like columns (>= 5) and a text indicator column.
+    _auto_pivot = False
+    if not mapping.get("pivot"):
+        _year_cols_detected = get_year_columns(df)
+        from data_utils import find_indicator_column as _find_ind_check
+        _ind_col_check = _find_ind_check(df)
+        if len(_year_cols_detected) >= 5 and _ind_col_check:
+            _auto_pivot = True
+
+    if mapping.get("pivot") or isinstance(_get_col(mapping.get("time")), list) or _auto_pivot:
         # Always use the best human-readable indicator column (not LLM's guess which
         # may pick machine-code columns like SERIES_CODE over INDICATOR).
         from data_utils import find_indicator_column as _find_ind
         detected_ind_col = _find_ind(df)
         indicator_col = detected_ind_col or mapping.get("indicator_column") or "SERIES_NAME"
-        year_cols = mapping.get("year_columns") or get_year_columns(df)
+        raw_year_cols = mapping.get("year_columns")
+        if raw_year_cols:
+            # LLM may return integers (e.g. [2019]) but DataFrame columns are strings ('2019').
+            # Normalize to strings and intersect with actual df.columns to prevent KeyError.
+            df_col_set = set(df.columns)
+            normalized = [str(c) for c in raw_year_cols]
+            year_cols = [c for c in normalized if c in df_col_set]
+            if not year_cols:
+                year_cols = get_year_columns(df)
+        else:
+            year_cols = get_year_columns(df)
         long_df, unit_col, ind_col = pivot_indicator_panel(
             df, indicator_col=indicator_col, year_cols=year_cols
         )
@@ -134,7 +154,12 @@ def prepare_data(df: pd.DataFrame, mapping: dict, intent: dict) -> tuple[pd.Data
         if outcome_val:
             mask = long_df[ind_col].astype(str).str.contains(re.escape(str(outcome_val)), case=False, na=False)
             outcome_df = long_df[mask][[unit_col, "year", "value"]].rename(columns={"value": str(outcome_val)})
-        if treatment_val:
+        # Guard: treatment_val should be an indicator name, not a structural column
+        # like COUNTRY or YEAR. If it matches the unit column name, skip it to avoid
+        # creating a renamed column that collides with the merge key.
+        if treatment_val and str(treatment_val).upper() not in (
+            str(unit_col).upper(), "YEAR", "COUNTRY", "SERIES_CODE", "SERIES_NAME"
+        ):
             mask = long_df[ind_col].astype(str).str.contains(re.escape(str(treatment_val)), case=False, na=False)
             treatment_df = long_df[mask][[unit_col, "year", "value"]].rename(columns={"value": str(treatment_val)})
 
@@ -178,7 +203,14 @@ def prepare_data(df: pd.DataFrame, mapping: dict, intent: dict) -> tuple[pd.Data
         out_intent["time"] = time_val
     unit_map = _get_col(mapping.get("unit"))
     if unit_map:
-        out_intent["unit"] = unit_map
+        # Sanity check: unit column must be categorical/string and must not be
+        # the same as the outcome column (LLM sometimes maps a numeric outcome
+        # as the unit, which causes groupby failures in forecast models).
+        outcome_col_check = out_intent.get("outcome")
+        if (unit_map != outcome_col_check
+                and unit_map in df.columns
+                and not pd.api.types.is_numeric_dtype(df[unit_map])):
+            out_intent["unit"] = unit_map
 
     # Filter to a specific unit if requested
     unit_desc = intent.get("unit_value")
