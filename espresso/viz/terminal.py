@@ -211,21 +211,26 @@ class ConsoleLog:
         self._t0 = time.monotonic()
 
     def emit(self, tag: str, text: str, *, note: str = "") -> None:
+        import textwrap as _tw
         elapsed = time.monotonic() - self._t0
         ts = f"+{elapsed:.2f}s"
         style = _TAG_STYLES.get(tag, "dim")
         tag_markup = f"[{style}][{tag}][/{style}]"
         ts_markup = f"[dim]{ts:>8}[/dim]"
 
-        if tag == "KEY":
-            console.print(Rule(style=f"dim {P['primary']}"))
-            console.print(f"  {ts_markup}  {tag_markup}  [bold {P['brand']}]{text}[/bold {P['brand']}]")
-            console.print(Rule(style=f"dim {P['primary']}"))
-        else:
-            console.print(f"  {ts_markup}  {tag_markup}  {text}")
+        # KEY tag is no longer printed inline — the Key Number Panel is the hero.
+        # FIT tag also suppressed inline — it appears inside the Panel.
+        if tag in ("KEY", "FIT"):
+            return
+        console.print(f"  {ts_markup}  {tag_markup}  {text}")
 
         if note:
-            console.print(f"             [dim italic {P['plain']}]  ↳ {note}[/dim italic {P['plain']}]")
+            # Wrap note text so long justifications don't truncate mid-word.
+            # Indent: 13 spaces (timestamp column) + 2 (margin) + 4 (↳ prefix) = 19 chars
+            indent = "               "  # 15 spaces to align with text after "↳ "
+            note_width = max(60, min(console.size.width - len(indent) - 4, 100))
+            wrapped = _tw.fill(note, width=note_width, subsequent_indent=indent)
+            console.print(f"             [dim italic {P['plain']}]  ↳ {wrapped}[/dim italic {P['plain']}]")
 
 
 # ---------------------------------------------------------------------------
@@ -287,7 +292,8 @@ def render_tool_call(step) -> None:
     tool = step.tool or "(thought)"
     tag = _TOOL_TAG_MAP.get(tool, "STEP")
     preview = _short(step.result_preview or "", 80)
-    note = _short(step.justification or "", 100) if getattr(step, "justification", "") else ""
+    # Pass the full justification — ConsoleLog.emit wraps it properly.
+    note = (step.justification or "").strip() if getattr(step, "justification", "") else ""
     status = getattr(step, "status", "ok")
     if status == "error":
         tag = "ERR"
@@ -299,19 +305,23 @@ def render_tool_call(step) -> None:
 # ---------------------------------------------------------------------------
 
 def render_header(*, question: str, source: str, structure: str) -> None:
-    """Cinematic analysis header with brown rule borders."""
-    console.print()
-    console.print(Rule(style=f"{P['primary']}"))
-    console.print(
-        f"  [{P['brand']}]{MASCOT}[/{P['brand']}]  "
-        f"[bold {P['brand']}]ESPRESSO[/bold {P['brand']}]  "
-        f"[dim {P['accent']}]Inference Engine  ·  v3[/dim {P['accent']}]"
-    )
-    console.print(Rule(style=f"dim {P['primary']}"))
-    _label_row("Question", f"[bold]{question}[/bold]")
+    """Analysis header — visually separates the data-load phase from the analysis run."""
     src_name = source.split("\\")[-1].split("/")[-1] if source else "(in-memory)"
-    _label_row("Dataset ", f"[{P['accent']}]{src_name}[/{P['accent']}]  [dim]·  {structure}[/dim]")
-    _label_row("Engine  ", f"[dim {P['accent']}]selecting…[/dim {P['accent']}]")
+    console.print()
+    console.print(Rule(
+        f"[bold {P['brand']}]{MASCOT}  ESPRESSO[/bold {P['brand']}]  "
+        f"[dim {P['accent']}]Inference Engine[/dim {P['accent']}]",
+        style=f"{P['primary']}",
+        align="left",
+    ))
+    console.print(
+        f"  [dim {P['accent']}]question[/dim {P['accent']}]  "
+        f"[bold]{question}[/bold]"
+    )
+    console.print(
+        f"  [dim {P['accent']}]dataset [/dim {P['accent']}]  "
+        f"[{P['accent']}]{src_name}[/{P['accent']}]  [dim]·  {structure}[/dim]"
+    )
     console.print(Rule(style=f"dim {P['primary']}"))
     console.print()
     _shared_log.__init__()  # reset timer for this run
@@ -327,7 +337,7 @@ def render_engine_line(model_display: str) -> None:
 
 
 def render_equation(model_key: str, outcome: str = "", treatment: str = "", *, step: int = 999) -> None:
-    """Print the equation bar, showing tokens revealed up to `step`."""
+    """Print the equation bar below the charts as a model-spec footer."""
     tokens = list(EQUATION_TEMPLATES.get(model_key, []))
     if not tokens:
         return
@@ -354,7 +364,9 @@ def render_equation(model_key: str, outcome: str = "", treatment: str = "", *, s
         parts.append(f"[dim {P['accent']}] …[/dim {P['accent']}]")
 
     eq_line = "".join(parts)
-    console.print(f"  [dim {P['accent']}]Equation[/dim {P['accent']}]  {eq_line}")
+    console.print(Rule(style=f"dim {P['primary']}"))
+    console.print(f"  [dim {P['accent']}]model[/dim {P['accent']}]  {eq_line}")
+    console.print()
 
 
 # ---------------------------------------------------------------------------
@@ -364,7 +376,7 @@ def render_equation(model_key: str, outcome: str = "", treatment: str = "", *, s
 SPARK_BLOCKS = "▁▂▃▄▅▆▇█"
 
 
-def _sparkline(series, width: int = 24) -> str:
+def _sparkline(series, width: int = 12) -> str:
     try:
         vals = pd.to_numeric(series, errors="coerce").dropna()
         if len(vals) < 2:
@@ -401,12 +413,12 @@ def render_profile(profile, *, max_rows: int = 18, df: "Optional[pd.DataFrame]" 
         title=f"Data  ·  {profile.n_rows:,} rows × {profile.n_cols} cols  ·  {profile.structure}",
         title_style="bold", box=box.SIMPLE, header_style=f"bold {P['primary']}", show_lines=False,
     )
-    t.add_column("Column", style="bold", overflow="fold", max_width=22)
-    t.add_column("Type", style="dim")
-    t.add_column("Unique", justify="right")
-    t.add_column("Missing", justify="right")
-    t.add_column("Trend", overflow="fold", max_width=26, style=f"dim {P['accent']}")
-    t.add_column("Range / sample", overflow="fold", max_width=38)
+    t.add_column("Column", style="bold", no_wrap=True, max_width=26)
+    t.add_column("Type", style="dim", no_wrap=True)
+    t.add_column("Unique", justify="right", no_wrap=True)
+    t.add_column("Missing", justify="right", no_wrap=True)
+    t.add_column("Trend", overflow="fold", max_width=14, style=f"dim {P['accent']}", no_wrap=True)
+    t.add_column("Range / sample", overflow="fold", max_width=34)
 
     for c in shown:
         if c.min is not None and c.max is not None:
@@ -425,9 +437,9 @@ def render_profile(profile, *, max_rows: int = 18, df: "Optional[pd.DataFrame]" 
                 spark = _sparkline(df[c.name])
             except Exception:
                 pass
-        t.add_row(_short(c.name, 22), c.semantic_type, f"{c.n_unique:,}", miss, spark, _short(range_str, 38))
+        t.add_row(_short(c.name, 26), c.semantic_type, f"{c.n_unique:,}", miss, spark, _short(range_str, 34))
     if hidden > 0:
-        t.add_row(f"[dim]+ {hidden} more columns[/dim]", "", "", "", "", "")
+        t.add_row(f"[dim]… {hidden} more[/dim]", "", "", "", "", "")
     console.print(t)
 
     cand_bits = []
@@ -470,13 +482,44 @@ def _check_known_law(col_a: str, col_b: str) -> Optional[str]:
 
 
 def render_correlation_heatmap(df: pd.DataFrame, *, max_cols: int = 6) -> None:
-    """ASCII correlation matrix for numeric columns."""
+    """ASCII correlation matrix for numeric columns.
+    Skips the full matrix when columns are nearly perfectly collinear — instead
+    surfaces the collinear block as a note so the user understands the data structure
+    without having to read a wall of +1.00 values.
+    """
     try:
         num_cols = [c for c in df.columns
                     if pd.api.types.is_numeric_dtype(df[c]) and df[c].nunique() > 3][:max_cols]
         if len(num_cols) < 2:
             return
         corr = df[num_cols].corr()
+
+        # Count off-diagonal pairs with |r| >= 0.99.  When a large collinear block exists
+        # (e.g. Open/Close/High/Low all r≈1.00), suppress the heatmap for those columns
+        # and replace with a one-line note — a wall of +1.00 conveys nothing.
+        off_diag = [(ca, cb, corr.loc[ca, cb])
+                    for i, ca in enumerate(num_cols)
+                    for cb in num_cols[i + 1:]]
+        collinear = list(dict.fromkeys(
+            c for ca, cb, r in off_diag if abs(r) >= 0.99
+            for c in (ca, cb)
+        ))
+        if len(collinear) >= 3:
+            independent = [c for c in num_cols if c not in collinear]
+            block_str = ", ".join(_short(c, 20) for c in collinear)
+            console.print(
+                f"  [{P['warning']}]⚡[/{P['warning']}]  "
+                f"[dim]Collinear block: [{P['accent']}]{block_str}[/{P['accent']}] "
+                f"(r ≈ +1.00) — analysis uses the mapped column, not the full block.[/dim]"
+            )
+            # Rebuild num_cols: keep just first of collinear block + independent cols
+            num_cols = collinear[:1] + independent
+            if len(num_cols) < 2:
+                return
+            corr = df[num_cols].corr()
+            off_diag = [(ca, cb, corr.loc[ca, cb])
+                        for i, ca in enumerate(num_cols)
+                        for cb in num_cols[i + 1:]]
 
         t = Table(box=box.SIMPLE, header_style=f"bold {P['primary']}", show_lines=False,
                   title="Correlations", title_style="bold")
@@ -500,11 +543,9 @@ def render_correlation_heatmap(df: pd.DataFrame, *, max_cols: int = 6) -> None:
 
         # Named law callouts
         strongest = ("", "", 0.0)
-        for i, ca in enumerate(num_cols):
-            for cb in num_cols[i + 1:]:
-                r = abs(corr.loc[ca, cb])
-                if r > abs(strongest[2]):
-                    strongest = (ca, cb, corr.loc[ca, cb])
+        for ca, cb, r in off_diag:
+            if abs(r) > abs(strongest[2]):
+                strongest = (ca, cb, r)
         if abs(strongest[2]) >= 0.4:
             law = _check_known_law(strongest[0], strongest[1])
             law_note = f"  — [bold]{law}[/bold] pattern" if law else ""
@@ -538,8 +579,8 @@ def render_histogram(series, col_name: str = "", *, bins: int = 6) -> None:
         bar_width = 30
 
         t = Table(
-            title=f"Distribution · {_short(col_name, 28)}  (N={len(vals):,})",
-            title_style="bold", box=box.SIMPLE,
+            title=f"{_short(col_name, 32)}  ·  distribution  (N={len(vals):,})",
+            title_style=f"bold", title_justify="left", box=box.SIMPLE,
             header_style=f"bold {P['primary']}", show_lines=False,
         )
         t.add_column("Range", style="dim", min_width=14)
@@ -576,24 +617,35 @@ def render_diagnostics(diag: dict, *, model_display: str = "") -> None:
         console.print(Panel(diag["error"], title="Diagnostics error", border_style=P["danger"]))
         return
 
-    title = "Pre-analysis diagnostics" + (f"  ·  {model_display}" if model_display else "")
+    title = "Diagnostics" + (f"  ·  {model_display}" if model_display else "")
     t = Table(title=title, box=box.SIMPLE, header_style=f"bold {P['primary']}",
-              title_style="bold", show_lines=False)
-    t.add_column("", width=2)
-    t.add_column("Check", style="bold")
-    t.add_column("Result", overflow="fold", style="dim")
+              title_style=f"bold", title_justify="left", show_lines=False)
+    t.add_column("", width=3, no_wrap=True)
+    t.add_column("Test", style="bold", min_width=22)
+    t.add_column("Result", overflow="fold")
+    passed = 0
+    total = 0
     for check in diag.get("checks", []):
+        total += 1
         if "error" in check:
-            t.add_row(f"[{P['warning']}]![/{P['warning']}]", check.get("test", "?"), check["error"])
+            t.add_row(f"[{P['warning']}]?[/{P['warning']}]", check.get("test", "?"),
+                      f"[dim]{check['error']}[/dim]")
         else:
             ok = not check.get("is_violated")
+            if ok:
+                passed += 1
             mark = f"[{P['success']}]✓[/{P['success']}]" if ok else f"[{P['danger']}]✗[/{P['danger']}]"
-            t.add_row(mark, check.get("test", ""), check.get("interpretation", ""))
+            interp = check.get("interpretation", "")
+            result_style = "dim" if ok else f"{P['danger']}"
+            t.add_row(mark, check.get("test", ""),
+                      f"[{result_style}]{interp}[/{result_style}]")
     console.print(t)
     if diag.get("violations"):
-        console.print(f"  [{P['danger']}]●[/{P['danger']}] [dim]Violations: {'; '.join(diag['violations'])}[/dim]")
+        for v in diag["violations"]:
+            console.print(f"  [{P['danger']}]△[/{P['danger']}]  [dim]{v}[/dim]")
     if diag.get("corrections"):
-        console.print(f"  [cyan]●[/cyan] [dim]Corrections: {'; '.join(diag['corrections'])}[/dim]")
+        for c in diag["corrections"]:
+            console.print(f"  [{P['success']}]→[/{P['success']}]  [dim italic]{c}[/dim italic]")
 
 
 # ---------------------------------------------------------------------------
@@ -627,11 +679,11 @@ def compute_confidence_score(result: dict, diagnostics: dict, n_obs: int,
 
     total_score = round(sig + diag_score + samp + era_score)
     if total_score >= 70:
-        label, color, bullet = "High confidence", P["success"], "🟢"
+        label, color, bullet = "High confidence", P["success"], "●"
     elif total_score >= 45:
-        label, color, bullet = "Moderate confidence", P["warning"], "🟡"
+        label, color, bullet = "Moderate confidence", P["warning"], "●"
     else:
-        label, color, bullet = "Low confidence", P["danger"], "🔴"
+        label, color, bullet = "Low confidence", P["danger"], "●"
 
     return {
         "score": total_score,
@@ -655,6 +707,45 @@ def _block_bar(filled: int, total: int = 30, color: str = "") -> str:
 # Big Key Number Panel
 # ---------------------------------------------------------------------------
 
+def _detect_hero_scale(eff: float) -> tuple[float, str]:
+    """Return (scale_factor, unit_suffix) to make `eff` human-readable in a hero panel.
+
+    For tiny coefficients (|x| < 1e-4), pick the smallest rescale that gives |x*scale| >= 0.01.
+    Returns (1.0, "") for normal-sized numbers.
+    """
+    abs_e = abs(eff)
+    if abs_e == 0 or (abs_e >= 1e-4 and abs_e < 1e6):
+        return 1.0, ""
+    if abs_e < 1e-4:
+        for exp, suffix in [(12, "trillion"), (9, "billion"), (6, "million"), (3, "thousand")]:
+            scale = 10 ** exp
+            if abs(eff * scale) >= 0.01:
+                return float(scale), suffix
+    return 1.0, ""
+
+
+def _fmt_hero_coef(eff: float, treatment: str = "") -> tuple[str, str]:
+    """Format the hero coefficient with optional unit rescaling for readability.
+
+    Returns (display_value, unit_note).
+    For tiny coefficients (|coef| < 1e-4), rescales to a larger unit and notes it.
+    For large coefficients (|coef| >= 1e6), adds comma grouping.
+    """
+    abs_e = abs(eff)
+    if abs_e == 0:
+        return "+0.0000", ""
+    scale, suffix = _detect_hero_scale(eff)
+    if scale != 1.0:
+        rescaled = eff * scale
+        prefix = "+" if rescaled > 0 else ""
+        unit_note = f"per {suffix} units of {_short(treatment, 20)}" if treatment else f"×10⁻{int(math.log10(scale))}"
+        return f"{prefix}{rescaled:,.4f}", unit_note
+    if abs_e >= 1e6:
+        prefix = "+" if eff > 0 else ""
+        return f"{prefix}{eff:,.0f}", ""
+    return fmt_coef(eff), ""
+
+
 def render_key_number_panel(result: dict, intent: dict, score: dict) -> None:
     eff = result.get("treatment_effect", result.get("slope", result.get("effect", 0))) or 0
     se = result.get("se", 0) or 0
@@ -667,11 +758,34 @@ def render_key_number_panel(result: dict, intent: dict, score: dict) -> None:
 
     sig_star = "★★★" if pval < 0.001 else "★★" if pval < 0.01 else "★" if pval < 0.05 else "n.s."
     border_col = P["success"] if pval < 0.05 else (P["warning"] if pval < 0.10 else P["neutral"])
+    p_color = P["success"] if pval < 0.05 else (P["warning"] if pval < 0.10 else P["neutral"])
 
-    number_line = f"[bold {P['brand']}]{fmt_coef(eff)}[/bold {P['brand']}]"
-    ci_line = f"[dim]95% CI  {fmt_ci(ci_lo, ci_hi)}[/dim]"
-    p_line = f"[dim]p = {pval:.4f}  {sig_star}   ·   N = {n:,}[/dim]"
-    rel_line = f"[dim {P['accent']}]{treatment}  →  {outcome}[/dim {P['accent']}]"
+    hero_val, unit_note = _fmt_hero_coef(eff, treatment)
+    number_line = f"[bold {P['brand']}]{hero_val}[/bold {P['brand']}]"
+    if unit_note:
+        number_line += f"  [dim {P['accent']}]({unit_note})[/dim {P['accent']}]"
+
+    # CI: rescale using same factor as the hero for consistency
+    scale, _ = _detect_hero_scale(eff)
+    def _fmt_ci_bound(v: float) -> str:
+        v_s = v * scale
+        abs_vs = abs(v_s)
+        if abs_vs >= 1e6:
+            return f"{v_s:,.0f}"
+        elif abs_vs == 0:
+            return "0.000"
+        elif abs_vs >= 0.001:
+            return f"{v_s:,.3f}"
+        return f"{v_s:.3e}"
+    ci_display = f"[{_fmt_ci_bound(ci_lo)},  {_fmt_ci_bound(ci_hi)}]"
+    if scale != 1.0:
+        ci_display += "  [dim](rescaled)[/dim]"
+    ci_line = f"[dim]95% CI  {ci_display}[/dim]"
+    p_line = (
+        f"[{p_color}]p = {pval:.4f}  {sig_star}[/{p_color}]"
+        f"[dim]   ·   N = {n:,}[/dim]"
+    )
+    rel_line = f"[dim {P['accent']}]{_short(treatment, 28)}  →  {_short(outcome, 28)}[/dim {P['accent']}]"
     score_line = (
         f"[{score['color']}]{score['bullet']} {score['label']}  "
         f"{score['score']}/100[/{score['color']}]"
@@ -682,7 +796,14 @@ def render_key_number_panel(result: dict, intent: dict, score: dict) -> None:
         f"   {ci_line}\n   {p_line}\n\n"
         f"   {score_line}\n"
     )
-    console.print(Panel(body, border_style=border_col, padding=(0, 2)))
+    console.print()
+    console.print(Panel(
+        body,
+        title=f"[dim {P['accent']}]result[/dim {P['accent']}]",
+        title_align="left",
+        border_style=border_col,
+        padding=(0, 2),
+    ))
 
 
 # ---------------------------------------------------------------------------
@@ -693,40 +814,31 @@ def render_significance_meter(result: dict, score: dict) -> None:
     eff = result.get("treatment_effect", result.get("slope", result.get("effect", 0))) or 0
     se = result.get("se", 0) or 0
     pval = result.get("pvalue", result.get("p_value", 1)) or 1
-    ci_lo = result.get("ci_lower", eff - 1.96 * se)
-    ci_hi = result.get("ci_upper", eff + 1.96 * se)
     r2 = result.get("r_squared", 0) or 0
+    n = result.get("n_obs", 0) or 0
 
-    # Effect size label (rough Cohen's d equivalent)
-    if abs(eff) == 0:
-        strength = "none"
-    elif abs(eff) < 0.2 * (abs(ci_hi - ci_lo) / 4 + 0.001):
-        strength = "small"
-    elif abs(eff) < 0.8 * (abs(ci_hi - ci_lo) / 4 + 0.001):
-        strength = "medium"
-    else:
-        strength = "large"
-
-    # p-value position on 0→1 bar (inverted: low p → high fill)
+    # p-value → evidence strength bar (low p = high fill)
     p_fill = max(0, int((1.0 - min(1.0, pval)) * 30))
-    # CI width fill (wider = less certain)
-    ci_width = abs(ci_hi - ci_lo)
-    max_ci = max(ci_width, abs(eff) * 2 + 0.001)
-    ci_fill = int((1 - ci_width / (max_ci * 2 + 0.001)) * 30)
-    # Confidence score fill
-    cs_fill = int(score["score"] / 100 * 30)
-    # R² fill
-    r2_fill = int(r2 * 30)
-
     p_color = P["success"] if pval < 0.05 else (P["warning"] if pval < 0.10 else P["danger"])
 
-    console.print()
-    console.print(f"  [dim {P['accent']}]Significance meter[/dim {P['accent']}]")
-    console.print(f"  [dim]Evidence strength  [/dim]{_block_bar(p_fill, 30, p_color)}  [dim]p={pval:.3f}[/dim]")
-    console.print(f"  [dim]CI precision       [/dim]{_block_bar(max(0, ci_fill), 30)}  [dim]CI width={ci_width:.3g}[/dim]")
+    # |t-stat| → precision bar, capped at t=4 (≈30 bars at t=4)
+    t_stat = abs(eff / se) if se > 0 else 0.0
+    t_fill = min(30, int(t_stat / 4.0 * 30))
+    t_disp = f"{t_stat:.2f}" if t_stat < 100 else ">99"
+
+    # R² → variance explained
+    r2_fill = int(r2 * 30)
     r2_disp = f"{r2:.4f}" if r2 >= 0.001 else (f"{r2:.2e}" if r2 > 0 else "0.0000")
-    console.print(f"  [dim]Variance explained [/dim]{_block_bar(r2_fill, 30)}  [dim]R²={r2_disp}[/dim]")
-    console.print(f"  [dim]Confidence score   [/dim]{_block_bar(cs_fill, 30, score['color'])}  [{score['color']}]{score['score']}/100[/{score['color']}]")
+
+    # Confidence score
+    cs_fill = int(score["score"] / 100 * 30)
+
+    console.print()
+    console.print(f"  [dim {P['accent']}]Fit summary[/dim {P['accent']}]")
+    console.print(f"  [dim]p-value      [/dim]{_block_bar(p_fill, 30, p_color)}  [dim]p={pval:.3f}[/dim]")
+    console.print(f"  [dim]|t-stat|     [/dim]{_block_bar(t_fill, 30)}  [dim]t={t_disp}[/dim]")
+    console.print(f"  [dim]R² (fit)     [/dim]{_block_bar(r2_fill, 30)}  [dim]{r2_disp}[/dim]")
+    console.print(f"  [dim]confidence   [/dim]{_block_bar(cs_fill, 30, score['color'])}  [{score['color']}]{score['score']}/100[/{score['color']}]")
     console.print()
 
 
@@ -734,13 +846,34 @@ def render_significance_meter(result: dict, score: dict) -> None:
 # Forecast renderer
 # ---------------------------------------------------------------------------
 
+def _fmt_forecast_val(v: float) -> str:
+    """Format a forecast value cleanly.
+    Uses T/B/M suffixes for very large values so columns stay narrow.
+    """
+    abs_v = abs(v)
+    if abs_v >= 1e12:
+        return f"{v / 1e12:,.2f}T"
+    elif abs_v >= 1e9:
+        return f"{v / 1e9:,.2f}B"
+    elif abs_v >= 1e6:
+        return f"{v / 1e6:,.2f}M"
+    elif abs_v >= 1e3:
+        return f"{v:,.2f}"
+    elif abs_v >= 1:
+        return f"{v:.4f}"
+    elif abs_v > 0:
+        return f"{v:.4e}"
+    return "0"
+
+
 def render_forecast(model_key: str, result: dict, intent: dict) -> None:
     forecasts = result.get("forecasts", []) or []
     times = result.get("forecast_times", []) or list(range(1, len(forecasts) + 1))
     hist_vals = result.get("historical_values", []) or []
     hist_times = result.get("historical_times", []) or list(range(len(hist_vals)))
 
-    t = Table(title=f"{result.get('model', model_key)} forecast",
+    outcome = intent.get("outcome", "value")
+    t = Table(title=f"{result.get('model', model_key)} forecast  ·  {_short(outcome, 32)}",
               box=box.SIMPLE_HEAVY, header_style="bold", title_style="bold")
     t.add_column("Period", justify="right")
     t.add_column("Forecast", justify="right")
@@ -748,17 +881,24 @@ def render_forecast(model_key: str, result: dict, intent: dict) -> None:
     lo = result.get("ci_lower", []) or []
     hi = result.get("ci_upper", []) or []
     for i, (tt, f) in enumerate(zip(times, forecasts)):
-        ci = f"[{lo[i]:.3f}, {hi[i]:.3f}]" if i < len(lo) and i < len(hi) else "—"
-        t.add_row(str(tt), f"{f:.4f}", ci)
+        f_str = _fmt_forecast_val(float(f))
+        if i < len(lo) and i < len(hi):
+            ci = f"[{_fmt_forecast_val(float(lo[i]))}, {_fmt_forecast_val(float(hi[i]))}]"
+        else:
+            ci = "—"
+        t.add_row(str(tt), f_str, ci)
     console.print(t)
 
-    info = (
-        f"AIC={result.get('aic', '—')} · RMSE={result.get('rmse', 0):.4f} · "
-        f"n={result.get('n_obs', 0)} · engine={result.get('engine', '—')}"
-    )
-    console.print(f"[dim]{info}[/dim]")
+    aic = result.get("aic", None)
+    rmse = result.get("rmse", 0)
+    n = result.get("n_obs", 0)
+    engine = result.get("engine", "—")
+    aic_str = f"{aic:.3f}" if aic is not None else "—"
+    rmse_str = _fmt_forecast_val(float(rmse)) if rmse else "0"
+    info = f"AIC={aic_str}  ·  RMSE={rmse_str}  ·  n={n}  ·  engine={engine}"
+    console.print(f"  [dim]{info}[/dim]")
     _plotext_forecast(hist_times, hist_vals, times, forecasts, lo, hi,
-                      ylabel=intent.get("outcome", "value"))
+                      ylabel=outcome)
 
 
 def _plt_transparent(plt) -> None:
@@ -787,7 +927,7 @@ def _plotext_forecast(hist_t, hist_y, fc_t, fc_y, lo, hi, *, ylabel: str = "") -
             if lo and hi and len(lo) == len(fc_y):
                 plt.fill_between(xs, list(map(float, lo)), list(map(float, hi)),
                                  label="95% CI", color="orange+")
-        plt.title(f"{'─'*4}  {_short(ylabel, 28)} — history + forecast  {'─'*4}")
+        plt.title(f"{_short(ylabel, 28)}  —  history + forecast")
         plt.xlabel("time")
         plt.ylabel(_short(ylabel, 16))
         _plt_transparent(plt)
@@ -831,29 +971,14 @@ def render_regression(model_key: str, result: dict, intent: dict,
     _shared_log.emit("FIT",
         f"R² = {r2_disp}  ·  N = {n:,}" + (f"  ·  FE = {fe}" if fe else ""))
 
-    t = Table(box=box.SIMPLE, header_style=f"bold {P['primary']}", show_lines=False,
-              title=f"  {result.get('model', model_key)}", title_style="bold", title_justify="left")
-    t.add_column("", style="dim")
-    t.add_column("", style="bold")
-    t.add_row("coef", fmt_coef(eff))
-    t.add_row("95% CI", fmt_ci(ci_lo, ci_hi))
-    t.add_row("p-value", f"[{p_color}]{pval:.4f}  {sig_star}[/{p_color}]")
-    t.add_row("R²", f"[dim]{fmt_r2(r2)}[/dim]")
-    t.add_row("N", f"{n:,}")
-    if fe:
-        t.add_row("FE", fe)
-    if se_t:
-        t.add_row("SE", se_t)
-    console.print(t)
-
-    # Confidence score + big number panel
+    # Confidence score + Key Number Panel (the hero) + Significance Meter (the detail)
+    # The mini-table (coef/CI/p/R²/N) is intentionally omitted — all those values live in
+    # the Key Number Panel and the Significance Meter, so showing them a third time in a
+    # plain table would be redundant noise.
     diag = diagnostics or {}
     score = compute_confidence_score(result, diag, n)
     render_key_number_panel(result, intent, score)
     render_significance_meter(result, score)
-
-    # Classic effect bar (kept for continuity)
-    _effect_bar(eff, ci_lo, ci_hi)
 
     # Chart 1: outcome over time — multi-line by unit when panel data
     ts_vals  = result.get("_ts_values") or []
@@ -942,7 +1067,7 @@ def _plotext_scatter(result: dict, intent: dict) -> None:
 
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
-        plt.title(f"{'─'*3}  {ylabel}  vs  {xlabel}  ·  {slope:+.3f} per unit  {'─'*3}")
+        plt.title(f"{ylabel}  vs  {xlabel}  ·  slope {slope:+.3f}")
         _plt_transparent(plt)
         console.file.flush()
         _write_plot(plt.build())
@@ -998,7 +1123,7 @@ def _plotext_timeseries(ts_vals: list, ts_times: list, *, ylabel: str = "",
         if not plotted:
             return
 
-        plt.title(title or f"{'─'*3}  {_short(ylabel or outcome_col, 30)} over time  {'─'*3}")
+        plt.title(title or f"{_short(ylabel or outcome_col, 30)}  over time")
         plt.xlabel("time")
         plt.ylabel(_short(ylabel or outcome_col, 16))
         _plt_transparent(plt)
@@ -1087,8 +1212,8 @@ def render_marginal_effects(result: dict, intent: dict, df: "Optional[pd.DataFra
 
         direction = "↑" if slope > 0 else "↓"
         plt.title(
-            f"{'─'*3}  Marginal effect: {ylabel} as {xlabel} varies  "
-            f"({direction}{abs(slope):.3f} per unit)  {'─'*3}"
+            f"Marginal effect: {ylabel} as {xlabel} varies  "
+            f"({direction}{abs(slope):.3f} per unit)"
         )
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
@@ -1123,7 +1248,7 @@ def render_residual_plot(result: dict) -> None:
         plt.plot_size(w, 10)
         plt.scatter(fitted, resids, color="cyan", marker="dot")
         plt.plot([min(fitted), max(fitted)], [0, 0], color="orange")
-        plt.title("─── Residuals vs Fitted ───")
+        plt.title("Residuals vs Fitted")
         plt.xlabel("fitted")
         plt.ylabel("residual")
         _plt_transparent(plt)
@@ -1169,8 +1294,8 @@ def render_world_events(events: list, *, outcome_col: str = "") -> None:
             console.print(f"       [{P['brand']}]→[/{P['brand']}] [dim italic]{data_note}[/dim italic]")
     console.print()
     console.print(
-        f"  [{P['warning']}]⚠[/{P['warning']}]  [dim]These events may confound your result. "
-        "Do they fall inside your treatment window?[/dim]"
+        f"  [{P['warning']}]▎[/{P['warning']}]  [dim]These events may confound the estimated "
+        "relationship. Consider whether they overlap your treatment window.[/dim]"
     )
 
 
@@ -1237,16 +1362,16 @@ def render_verdict(verdict_text: str, score: dict, caveat: str = "") -> None:
     # Word-wrap the verdict text so it never gets cut off mid-word
     wrapped_verdict = textwrap.fill(verdict_text, width=width - 4)
     body = (
-        f"\n  [bold]{wrapped_verdict}[/bold]\n\n"
-        + (f"  [{P['warning']}]Watch out for[/{P['warning']}]  [dim]{caveat}[/dim]\n\n" if caveat else "")
-        + f"  [{score['color']}]{score['bullet']} {score['label']}  {score['score']}/100[/{score['color']}]\n"
+        f"\n  [bold {P['brand']}]{wrapped_verdict}[/bold {P['brand']}]\n\n"
+        + (f"  [{P['warning']}]△[/{P['warning']}]  [dim]{caveat}[/dim]\n\n" if caveat else "")
+        + f"  [{score['color']}]{score['bullet']} {score['label']}  ·  {score['score']}/100[/{score['color']}]\n"
     )
     console.print(Panel(
         body,
-        title=f"[bold {P['brand']}]  {MASCOT}  ESPRESSO VERDICT  [/bold {P['brand']}]",
-        border_style=f"bold {P['primary']}",
-        padding=(0, 1),
-        expand=True,
+        title=f"[bold {P['primary']}]{MASCOT}  verdict[/bold {P['primary']}]",
+        title_align="left",
+        border_style=f"{P['primary']}",
+        padding=(0, 2),
     ))
 
 
@@ -1373,18 +1498,23 @@ def render_proactive_insights(insights: list) -> None:
     if not insights:
         return
     console.print()
-    console.print(Rule(f"[bold {P['brand']}]◈  WHAT YOU DIDN'T ASK (BUT SHOULD KNOW)[/bold {P['brand']}]",
-                       style=f"dim {P['primary']}"))
+    console.print(Rule(
+        f"[{P['brand']}]◈[/{P['brand']}]  [bold {P['primary']}]ALSO WORTH KNOWING[/bold {P['primary']}]  [{P['brand']}]◈[/{P['brand']}]",
+        style=f"dim {P['primary']}"
+    ))
     console.print()
     for item in insights:
         icon = item.get("icon", "◈")
         color = item.get("color", P["brand"])
         heading = item.get("heading", "")
         body = item.get("body", "")
-        console.print(f"  [{color}]{icon}[/{color}]  [bold]{heading}[/bold]")
+        console.print(f"  [{color}]▎[/{color}] [bold {color}]{icon}[/bold {color}]  [bold]{heading}[/bold]")
         if body:
-            console.print(f"     [dim]{body}[/dim]")
-    console.print()
+            import textwrap as _tw2
+            wrap_w = max(60, min(console.size.width - 10, 90))
+            wrapped_body = _tw2.fill(body, width=wrap_w, subsequent_indent="     ")
+            console.print(f"  [{color}]▎[/{color}]   [dim]{wrapped_body}[/dim]")
+        console.print()
 
 
 def render_interpretation(blocks: dict, *, expertise: str = "beginner",
@@ -1502,11 +1632,8 @@ def render_interpretation(blocks: dict, *, expertise: str = "beginner",
 
 def render_animated_result(result: dict, score: dict, intent: dict) -> None:
     """
-    3-beat animated result reveal:
-      Beat 1 — coefficient + CI bar fills left-to-right
-      Beat 2 — confidence score components tick up
-      Beat 3 — verdict-ready indicator
-    Total: ~1.2 seconds. Falls back silently if terminal doesn't support it.
+    Brief animated reveal — purely a loading cue, no permanent output.
+    The Key Number Panel (rendered immediately after) is the definitive hero display.
     """
     try:
         eff    = result.get("treatment_effect", result.get("slope", result.get("effect", 0))) or 0
@@ -1514,21 +1641,16 @@ def render_animated_result(result: dict, score: dict, intent: dict) -> None:
         pval   = result.get("pvalue", result.get("p_value", 1)) or 1
         ci_lo  = result.get("ci_lower", eff - 1.96 * se)
         ci_hi  = result.get("ci_upper", eff + 1.96 * se)
-        n      = result.get("n_obs", 0)
-        outcome   = _short(intent.get("outcome",   "Y"), 18)
-        treatment = _short(intent.get("treatment", "X"), 18)
 
         sig_star = "★★★" if pval < 0.001 else "★★" if pval < 0.01 else "★" if pval < 0.05 else "n.s."
         p_color  = P["success"] if pval < 0.05 else (P["warning"] if pval < 0.10 else P["neutral"])
-        s_color  = score.get("color", P["neutral"])
         ci_width = abs(ci_hi - ci_lo)
         max_range = max(ci_width, abs(eff) * 2, 0.001)
 
         BAR = 36
         ci_fill = max(1, int((1 - ci_width / (max_range * 2 + 0.001)) * BAR))
 
-        # Beat 1: animate the CI bar filling
-        console.print()
+        # Animate CI bar filling — transient only, leaves no permanent output
         with Live(console=console, transient=True, refresh_per_second=20) as live:
             for step in range(BAR + 1):
                 filled = min(step, ci_fill)
@@ -1540,41 +1662,10 @@ def render_animated_result(result: dict, score: dict, intent: dict) -> None:
                     f"  {bar}"
                     f"  [{P['accent']}]{fmt_ci(ci_lo, ci_hi)}[/{P['accent']}]"
                 ))
-                time.sleep(0.025)
-
-        # Beat 2: print settled result line
-        bar_final = (f"[{P['brand']}]{'█' * ci_fill}[/{P['brand']}]"
-                     f"[dim]{'░' * (BAR - ci_fill)}[/dim]")
-        console.print(
-            f"  [{P['brand']}]β̂[/{P['brand']}] = [{P['brand']}]{fmt_coef(eff)}[/{P['brand']}]"
-            f"  [{p_color}]{sig_star}[/{p_color}]"
-            f"  {bar_final}"
-            f"  [{P['accent']}]{fmt_ci(ci_lo, ci_hi)}[/{P['accent']}]"
-            f"  [dim]p={pval:.4f}  N={n:,}[/dim]"
-        )
-
-        # Beat 3: confidence score rolls up
-        target = score.get("score", 0)
-        with Live(console=console, transient=True, refresh_per_second=25) as live:
-            for v in range(0, target + 1, max(1, target // 20)):
-                live.update(Text.from_markup(
-                    f"  [{s_color}]{MASCOT} Confidence  {v}/100[/{s_color}]  "
-                    f"[dim]calculating…[/dim]"
-                ))
-                time.sleep(0.018)
-
-        console.print(
-            f"  [{s_color}]{MASCOT} {score.get('label', '')}  "
-            f"{score.get('score', 0)}/100[/{s_color}]  "
-            f"[dim]sig={score.get('sig',0)}/40  "
-            f"diag={score.get('diag',0)}/25  "
-            f"sample={score.get('samp',0)}/20  "
-            f"era={score.get('era',0)}/15[/dim]"
-        )
-        console.print()
+                time.sleep(0.02)
 
     except Exception:
-        pass  # Fall back silently — standard panels still render below
+        pass  # Fall back silently — Key Number Panel renders below
 
 
 def render_qq_plot(result: dict) -> None:
@@ -1633,7 +1724,7 @@ def render_qq_plot(result: dict) -> None:
         plt.scatter(theoretical, z_resids, color="cyan", marker="dot")
         plt.plot([min(theoretical), max(theoretical)],
                  [min(theoretical), max(theoretical)], color="orange", label="ideal")
-        plt.title("─── Q-Q Plot: residuals vs Normal  (deviations = non-normality) ───")
+        plt.title("Q-Q Plot  ·  residuals vs Normal")
         plt.xlabel("theoretical quantile")
         plt.ylabel("sample quantile")
         _plt_transparent(plt)
@@ -1657,16 +1748,26 @@ def render_followups(followups: list, *, countdown: bool = False,
     if not followups:
         return None
     console.print()
-    console.print(Rule("What next?", style=f"dim {P['primary']}"))
+    console.print(Rule(
+        f"[dim {P['accent']}]suggested next steps[/dim {P['accent']}]",
+        style=f"dim {P['primary']}",
+        align="left",
+    ))
+    console.print()
+    max_q_len = max(60, min(console.size.width - 12, 100))
     for i, q in enumerate(followups, 1):
-        console.print(f"  [{P['brand']}]{i}[/{P['brand']}]  [dim]{q}[/dim]")
+        q_disp = q if len(q) <= max_q_len else q[:max_q_len - 1].rstrip() + "…"
+        console.print(
+            f"  [bold {P['brand']}]{i}[/bold {P['brand']}]  [dim]{q_disp}[/dim]"
+        )
+    console.print()
     console.print(
-        f"\n  [dim {P['accent']}]or try:[/dim {P['accent']}]  "
-        f"[{P['accent']}]eras[/{P['accent']}]  [dim]·[/dim]  "
-        f"[{P['accent']}]robustness[/{P['accent']}]  [dim]·[/dim]  "
-        f"[{P['accent']}]export table[/{P['accent']}]  [dim]·[/dim]  "
-        f"[{P['accent']}]what if x = …[/{P['accent']}]  [dim]·[/dim]  "
-        f"[{P['accent']}]export[/{P['accent']}]"
+        f"  [dim]commands:  "
+        f"[{P['accent']}]eras[/{P['accent']}]  "
+        f"[{P['accent']}]robustness[/{P['accent']}]  "
+        f"[{P['accent']}]what if x = …[/{P['accent']}]  "
+        f"[{P['accent']}]split by <col>[/{P['accent']}]  "
+        f"[{P['accent']}]export[/{P['accent']}][/dim]"
     )
 
     if countdown:

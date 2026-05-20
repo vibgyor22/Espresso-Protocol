@@ -86,14 +86,19 @@ def _rich_clarifier(question: str, options: list[str]) -> Optional[str]:
 def _load_dataset(path: str, sheet: Optional[str] = None):
     res = ingest_load(path, sheet=sheet)
     if res.error:
-        console.print(f"[bold red]Could not load file:[/bold red] {res.error}")
+        console.print(f"  [{P['danger']}]✗[/{P['danger']}]  [bold]Could not load file:[/bold]  [dim]{res.error}[/dim]")
         return None
     if res.needs_sheet_choice:
-        console.print(f"[yellow]Excel file has multiple sheets:[/yellow] {res.available_sheets}")
+        console.print(f"  [{P['warning']}]![/{P['warning']}]  Excel file has multiple sheets: {res.available_sheets}")
         chosen = _rich_clarifier("Which sheet should I use?", res.available_sheets)
         return _load_dataset(path, sheet=chosen)
-    console.print(f"[dim]✓ {path}[/dim] · {len(res.df):,} rows × {len(res.df.columns)} cols"
-                  + (f" · sheet=[bold]{res.sheet}[/bold]" if res.sheet else ""))
+    src = path.split("\\")[-1].split("/")[-1]
+    console.print(
+        f"  [{P['success']}]✓[/{P['success']}]  [{P['accent']}]{src}[/{P['accent']}]"
+        f"  [dim]{len(res.df):,} rows × {len(res.df.columns)} cols"
+        + (f"  ·  sheet={res.sheet}" if res.sheet else "")
+        + "[/dim]"
+    )
     return res
 
 
@@ -203,13 +208,19 @@ def _run_repl():
 
     def need_data() -> bool:
         if session.df is None:
-            console.print("[yellow]No data loaded yet. Use:[/yellow] [bold]load <path-to-file>[/bold]")
+            console.print(
+                f"  [{P['warning']}]![/{P['warning']}]  No data loaded.  "
+                f"[dim]Use [bold]load <path>[/bold] to load a CSV, Excel, or Parquet file.[/dim]"
+            )
             return True
         return False
 
     def need_result() -> bool:
         if not session.result:
-            console.print("[yellow]No result yet. First run:[/yellow] [bold]ask <question>[/bold]")
+            console.print(
+                f"  [{P['warning']}]![/{P['warning']}]  No result yet.  "
+                f"[dim]Ask a question first, e.g. [italic]Is GDP related to inflation?[/italic][/dim]"
+            )
             return True
         return False
 
