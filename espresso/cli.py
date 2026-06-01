@@ -30,6 +30,7 @@ from typing import Optional
 
 import typer
 from rich import box
+from rich.columns import Columns
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
@@ -160,39 +161,48 @@ def _default(ctx: typer.Context):
 
 def _print_welcome() -> None:
     from .viz.terminal import MASCOT_ART
-    inner = (
+
+    inner = Text.from_markup(
         f"\n"
         f"{MASCOT_ART}\n"
         f"\n"
-        f"  [bold {P['brand']}]E S P R E S S O[/bold {P['brand']}]   "
-        f"[dim {P['accent']}]Inference Engine[/dim {P['accent']}]  "
-        f"[dim]·[/dim]  [dim {P['accent']}]v3[/dim {P['accent']}]\n"
-        f"  [italic {P['plain']}]Agentic econometrics for the terminal.[/italic {P['plain']}]\n"
+        f"  [dim #8A6340]────────────────────────────────────────────────────[/dim #8A6340]\n"
         f"\n"
-        f"  [dim {P['primary']}]──────────────────────────────────────────────────────[/dim {P['primary']}]\n"
+        f"  [bold {P['brand']}]◈  ESPRESSO PROTOCOL[/bold {P['brand']}]  "
+        f"[dim {P['accent']}]v3  ·  agentic econometrics[/dim {P['accent']}]\n"
+        f"  [italic {P['plain']}]Your data. A question. Real econometrics — in your terminal.[/italic {P['plain']}]\n"
         f"\n"
-        f"   [{P['brand']}]◈[/{P['brand']}]  Loads any CSV, Excel, Parquet — zero setup\n"
-        f"   [{P['brand']}]◈[/{P['brand']}]  Auto-selects the right model from 15+ estimators\n"
-        f"   [{P['brand']}]◈[/{P['brand']}]  Runs diagnostics, switches models if assumptions fail\n"
-        f"   [{P['brand']}]◈[/{P['brand']}]  Knows real-world events that shaped your data\n"
-        f"   [{P['brand']}]◈[/{P['brand']}]  Surfaces what you didn't ask but should know\n"
+        f"  [dim #8A6340]────────────────────────────────────────────────────[/dim #8A6340]\n"
         f"\n"
-        f"  [dim {P['primary']}]──────────────────────────────────────────────────────[/dim {P['primary']}]\n"
+        f"  [bold {P['accent']}]  MODELS[/bold {P['accent']}]  [dim]15+ estimators: DiD · ARIMA · Panel OLS · Quantile[/dim]\n"
+        f"  [bold {P['accent']}]  INPUT[/bold {P['accent']}]   [dim]CSV  ·  Excel  ·  Parquet  ·  Panel  ·  Time series[/dim]\n"
+        f"  [bold {P['accent']}]  OUTPUT[/bold {P['accent']}]  [dim]Terminal charts  ·  LaTeX tables  ·  HTML dashboard[/dim]\n"
+        f"  [bold {P['accent']}]  BRAIN[/bold {P['accent']}]   [dim]Claude AI interprets  ·  deterministic math computes[/dim]\n"
         f"\n"
-        f"  [bold {P['accent']}]›[/bold {P['accent']}] [bold]load[/bold] [dim]data.csv[/dim]\n"
-        f"  [dim {P['accent']}]  then just ask anything, no commands needed[/dim {P['accent']}]\n"
+        f"  [dim #8A6340]────────────────────────────────────────────────────[/dim #8A6340]\n"
         f"\n"
-        f"  [dim]eras · context · robustness · export table · what if · ?term[/dim]\n"
+        f"  [{P['brand']}]›[/{P['brand']}]  [bold]load[/bold] [dim]data.csv[/dim]"
+        f"  [dim]—  then ask anything in plain English[/dim]\n"
+        f"\n"
+        f"  [dim]eras  ·  context  ·  what if  ·  robustness  ·  export  ·  ?term[/dim]\n"
         f"\n"
     )
+
+    console.print()
     console.print(Panel(
-        Text.from_markup(inner),
+        inner,
         border_style=f"bold {P['primary']}",
-        box=box.DOUBLE,
+        box=box.DOUBLE_EDGE,
         padding=(0, 2),
+        title=f"[dim {P['accent']}]espressoprotocol.in[/dim {P['accent']}]",
+        title_align="right",
     ))
-    console.print(f"  [bold {P['brand']}]{MASCOT}[/bold {P['brand']}]  "
-                  f"[{P['primary']}]ready  ›[/{P['primary']}]\n")
+    console.print(
+        f"\n  [bold {P['brand']}]{MASCOT}[/bold {P['brand']}]  "
+        f"[{P['primary']}]ready[/{P['primary']}]  "
+        f"[dim]—[/dim]  "
+        f"[dim {P['accent']}]load a file to begin[/dim {P['accent']}]\n"
+    )
 
 
 # ---------------------------------------------------------------------------

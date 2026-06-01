@@ -40,15 +40,18 @@ console = Console()
 # ◈ — Espresso's pixel-diamond mascot.  Inline symbol throughout.
 MASCOT = "◈"
 
-# Welcome mascot — blocky robot with diamond eyes, arms, stubby legs.
+# Espresso cup art — the central visual identity of the welcome screen.
 MASCOT_ART = """\
-   [#6F4E37]▄▄▄▄▄▄▄▄▄▄▄[/#6F4E37]
-   [#6F4E37]█  [/#6F4E37][bold #E8B863]▀[/bold #E8B863][#6F4E37]   [/#6F4E37][bold #E8B863]▀[/bold #E8B863][#6F4E37]  █[/#6F4E37]
-   [#6F4E37]█▄▄▄▄▄▄▄▄▄█[/#6F4E37]
-   [#6F4E37]▄█▀█████▀█▄[/#6F4E37]
- [#6F4E37]▄██  █████  ██▄[/#6F4E37]
- [#6F4E37]▀▀█  █████  █▀▀[/#6F4E37]
-   [#6F4E37]█▄▄█   █▄▄█[/#6F4E37]\
+       [dim #D4A57A]( ( ( ( ([/dim #D4A57A]
+      [dim #D4A57A]) ) ) ) ) )[/dim #D4A57A]
+  [bold #6F4E37]╭─────────────────────╮[/bold #6F4E37]
+  [bold #6F4E37]│[/bold #6F4E37]                     [bold #6F4E37]│[/bold #6F4E37][#4A2C0A]╮[/#4A2C0A]
+  [bold #6F4E37]│[/bold #6F4E37]  [bold #E8B863]◈   ESPRESSO      [/bold #E8B863][bold #6F4E37]│[/bold #6F4E37][#4A2C0A]│[/#4A2C0A]
+  [bold #6F4E37]│[/bold #6F4E37]  [dim #D4A57A]    PROTOCOL       [/dim #D4A57A][bold #6F4E37]│[/bold #6F4E37][#4A2C0A]╯[/#4A2C0A]
+  [bold #6F4E37]│[/bold #6F4E37]                     [bold #6F4E37]│[/bold #6F4E37]
+  [bold #6F4E37]╰─────────────────────╯[/bold #6F4E37]
+     [#4A2C0A]╰───────────────────╯[/#4A2C0A]
+  [dim #6F4E37]═══════════════════════════[/dim #6F4E37]\
 """
 
 _SPINNER_FRAMES = ["◈", "◉", "◎", "◉"]
@@ -91,6 +94,21 @@ def fmt_r2(r2) -> str:
     if r2 > 0:
         return f"{r2:.2e}  ({r2 * 100:.3f}% variance explained)"
     return "0.0000  (0.0% variance explained)"
+
+
+def fmt_pval(p) -> str:
+    """Format p-value so it never silently rounds to 0.000 or 1.000."""
+    if p is None:
+        return "?"
+    try:
+        p = float(p)
+    except (TypeError, ValueError):
+        return str(p)
+    if p >= 0.001:
+        return f"{p:.3f}"
+    if p > 0:
+        return f"{p:.2e}"
+    return "<0.001"
 
 
 def fmt_ci(lo, hi) -> str:
@@ -749,7 +767,8 @@ def _fmt_hero_coef(eff: float, treatment: str = "") -> tuple[str, str]:
 def render_key_number_panel(result: dict, intent: dict, score: dict) -> None:
     eff = result.get("treatment_effect", result.get("slope", result.get("effect", 0))) or 0
     se = result.get("se", 0) or 0
-    pval = result.get("pvalue", result.get("p_value", 1)) or 1
+    pval_raw = result.get("pvalue", result.get("p_value", None))
+    pval = float(pval_raw) if pval_raw is not None else 1.0
     ci_lo = result.get("ci_lower", eff - 1.96 * se)
     ci_hi = result.get("ci_upper", eff + 1.96 * se)
     n = result.get("n_obs", 0)
@@ -782,7 +801,7 @@ def render_key_number_panel(result: dict, intent: dict, score: dict) -> None:
         ci_display += "  [dim](rescaled)[/dim]"
     ci_line = f"[dim]95% CI  {ci_display}[/dim]"
     p_line = (
-        f"[{p_color}]p = {pval:.4f}  {sig_star}[/{p_color}]"
+        f"[{p_color}]p = {fmt_pval(pval)}  {sig_star}[/{p_color}]"
         f"[dim]   ·   N = {n:,}[/dim]"
     )
     rel_line = f"[dim {P['accent']}]{_short(treatment, 28)}  →  {_short(outcome, 28)}[/dim {P['accent']}]"
@@ -813,7 +832,10 @@ def render_key_number_panel(result: dict, intent: dict, score: dict) -> None:
 def render_significance_meter(result: dict, score: dict) -> None:
     eff = result.get("treatment_effect", result.get("slope", result.get("effect", 0))) or 0
     se = result.get("se", 0) or 0
-    pval = result.get("pvalue", result.get("p_value", 1)) or 1
+    pval_raw = result.get("pvalue", result.get("p_value", None))
+    pval = pval_raw if (pval_raw is not None and pval_raw > 0) else (pval_raw if pval_raw == 0 else 1.0)
+    if pval is None:
+        pval = 1.0
     r2 = result.get("r_squared", 0) or 0
     n = result.get("n_obs", 0) or 0
 
@@ -828,14 +850,22 @@ def render_significance_meter(result: dict, score: dict) -> None:
 
     # R² → variance explained
     r2_fill = int(r2 * 30)
-    r2_disp = f"{r2:.4f}" if r2 >= 0.001 else (f"{r2:.2e}" if r2 > 0 else "0.0000")
+    fe_type = result.get("fe_type", "")
+    if r2 >= 0.001:
+        r2_disp = f"{r2:.4f}"
+    elif r2 > 0:
+        r2_disp = f"{r2:.2e}"
+    else:
+        r2_disp = "0.0000"
+    if fe_type and r2 < 0.05:
+        r2_disp += "  [dim](within R²)[/dim]"
 
     # Confidence score
     cs_fill = int(score["score"] / 100 * 30)
 
     console.print()
     console.print(f"  [dim {P['accent']}]Fit summary[/dim {P['accent']}]")
-    console.print(f"  [dim]p-value      [/dim]{_block_bar(p_fill, 30, p_color)}  [dim]p={pval:.3f}[/dim]")
+    console.print(f"  [dim]p-value      [/dim]{_block_bar(p_fill, 30, p_color)}  [dim]p={fmt_pval(pval)}[/dim]")
     console.print(f"  [dim]|t-stat|     [/dim]{_block_bar(t_fill, 30)}  [dim]t={t_disp}[/dim]")
     console.print(f"  [dim]R² (fit)     [/dim]{_block_bar(r2_fill, 30)}  [dim]{r2_disp}[/dim]")
     console.print(f"  [dim]confidence   [/dim]{_block_bar(cs_fill, 30, score['color'])}  [{score['color']}]{score['score']}/100[/{score['color']}]")
@@ -910,25 +940,32 @@ def _plt_transparent(plt) -> None:
         pass
 
 
+def _chart_header(title: str) -> None:
+    console.print(f"\n  [dim #8A6340]┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄[/dim #8A6340]")
+    console.print(f"  [bold #E8B863]◈  {title}[/bold #E8B863]")
+    console.print(f"  [dim #8A6340]┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄[/dim #8A6340]\n")
+
+
 def _plotext_forecast(hist_t, hist_y, fc_t, fc_y, lo, hi, *, ylabel: str = "") -> None:
     try:
         import plotext as plt
         if not hist_y and not fc_y:
             return
+        _chart_header(f"Forecast  ·  {_short(ylabel, 32)}")
         plt.clear_figure()
         w = min(console.size.width - 4, 100)
-        plt.plot_size(w, 16)
+        plt.plot_size(w, 18)
         if hist_y:
             plt.plot(list(map(_to_num, hist_t)), list(map(float, hist_y)),
-                     label="history", color="cyan")
+                     label="observed", color="cyan")
         if fc_y:
             xs = list(map(_to_num, fc_t))
             plt.plot(xs, list(map(float, fc_y)), label="forecast", color="orange")
             if lo and hi and len(lo) == len(fc_y):
                 plt.fill_between(xs, list(map(float, lo)), list(map(float, hi)),
                                  label="95% CI", color="orange+")
-        plt.title(f"{_short(ylabel, 28)}  —  history + forecast")
-        plt.xlabel("time")
+        plt.title(f"{_short(ylabel, 28)}  ·  historical + forecast")
+        plt.xlabel("year")
         plt.ylabel(_short(ylabel, 16))
         _plt_transparent(plt)
         console.file.flush()
@@ -953,7 +990,8 @@ def render_regression(model_key: str, result: dict, intent: dict,
                       df: "Optional[pd.DataFrame]" = None) -> None:
     eff = result.get("treatment_effect", result.get("slope", result.get("effect", 0))) or 0
     se = result.get("se", 0) or 0
-    pval = result.get("pvalue", result.get("p_value", 1)) or 1
+    pval_raw = result.get("pvalue", result.get("p_value", None))
+    pval = float(pval_raw) if pval_raw is not None else 1.0
     ci_lo = result.get("ci_lower", eff - 1.96 * se)
     ci_hi = result.get("ci_upper", eff + 1.96 * se)
     r2 = result.get("r_squared", 0) or 0
@@ -966,7 +1004,7 @@ def render_regression(model_key: str, result: dict, intent: dict,
 
     # Log KEY result to the console log
     _shared_log.emit("KEY",
-        f"β̂ = {fmt_coef(eff)}  ·  CI {fmt_ci(ci_lo, ci_hi)}  ·  p = {pval:.4f}  {sig_star}")
+        f"β̂ = {fmt_coef(eff)}  ·  CI {fmt_ci(ci_lo, ci_hi)}  ·  p = {fmt_pval(pval)}  {sig_star}")
     r2_disp = f"{r2:.4f}" if r2 >= 0.001 else (f"{r2:.2e}" if r2 > 0 else "0.0000")
     _shared_log.emit("FIT",
         f"R² = {r2_disp}  ·  N = {n:,}" + (f"  ·  FE = {fe}" if fe else ""))
@@ -983,15 +1021,19 @@ def render_regression(model_key: str, result: dict, intent: dict,
     # Chart 1: outcome over time — multi-line by unit when panel data
     ts_vals  = result.get("_ts_values") or []
     ts_times = result.get("_ts_times")  or []
+    outcome_label = intent.get("outcome", "outcome")
+    _chart_header(f"Time series  ·  {_short(outcome_label, 36)}")
     _plotext_timeseries(
         ts_vals, ts_times,
-        ylabel=intent.get("outcome", "outcome"),
+        ylabel=outcome_label,
         df=df,
         unit_col=intent.get("unit", ""),
-        outcome_col=intent.get("outcome", ""),
+        outcome_col=outcome_label,
     )
 
     # Chart 2: scatter + regression fit + CI band, colored by unit
+    treatment_label = intent.get("treatment", "predictor")
+    _chart_header(f"Scatter + fit  ·  {_short(outcome_label, 20)}  vs  {_short(treatment_label, 20)}")
     _plotext_scatter(result, intent)
 
 
@@ -1067,7 +1109,7 @@ def _plotext_scatter(result: dict, intent: dict) -> None:
 
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
-        plt.title(f"{ylabel}  vs  {xlabel}  ·  slope {slope:+.3f}")
+        plt.title(f"{ylabel}  vs  {xlabel}  ·  β = {slope:+.4f}")
         _plt_transparent(plt)
         console.file.flush()
         _write_plot(plt.build())
@@ -1083,7 +1125,7 @@ def _plotext_timeseries(ts_vals: list, ts_times: list, *, ylabel: str = "",
         import plotext as plt
         w = min(console.size.width - 4, 92)
         plt.clear_figure()
-        plt.plot_size(w, 14)
+        plt.plot_size(w, 16)
 
         plotted = False
         if df is not None and unit_col and outcome_col and unit_col in df.columns and outcome_col in df.columns:
@@ -1123,8 +1165,8 @@ def _plotext_timeseries(ts_vals: list, ts_times: list, *, ylabel: str = "",
         if not plotted:
             return
 
-        plt.title(title or f"{_short(ylabel or outcome_col, 30)}  over time")
-        plt.xlabel("time")
+        plt.title(title or f"{_short(ylabel or outcome_col, 30)}  ·  trend over time")
+        plt.xlabel("year")
         plt.ylabel(_short(ylabel or outcome_col, 16))
         _plt_transparent(plt)
         console.file.flush()

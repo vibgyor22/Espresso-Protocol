@@ -401,7 +401,7 @@ class Coordinator:
         else:
             eff = result.get("treatment_effect", result.get("slope", result.get("effect", 0))) or 0
             se  = result.get("se", 0) or 0
-            pval = result.get("pvalue", result.get("p_value", 1)) or 1
+            pval_raw = result.get("pvalue", result.get("p_value", None)); pval = float(pval_raw) if pval_raw is not None else 1.0
             ci_lo = _scalar_ci(result.get("ci_lower"), eff, se, -1.96)
             ci_hi = _scalar_ci(result.get("ci_upper"), eff, se, +1.96)
             r2   = result.get("r_squared", 0) or 0
@@ -449,7 +449,7 @@ class Coordinator:
         if self.s.model_key not in T.FORECAST_RUNNERS:
             eff = result.get("treatment_effect", result.get("slope", result.get("effect", 0))) or 0
             se = result.get("se", 0) or 0
-            pval = result.get("pvalue", result.get("p_value", 1)) or 1
+            pval_raw = result.get("pvalue", result.get("p_value", None)); pval = float(pval_raw) if pval_raw is not None else 1.0
             ci_lo = _scalar_ci(result.get("ci_lower"), eff, se, -1.96)
             ci_hi = _scalar_ci(result.get("ci_upper"), eff, se, +1.96)
             r2 = result.get("r_squared", 0) or 0
@@ -519,7 +519,7 @@ class Coordinator:
         if self.s.model_key not in T.FORECAST_RUNNERS and score:
             eff = result.get("treatment_effect", result.get("slope", result.get("effect", 0))) or 0
             se = result.get("se", 0) or 0
-            pval = result.get("pvalue", result.get("p_value", 1)) or 1
+            pval_raw = result.get("pvalue", result.get("p_value", None)); pval = float(pval_raw) if pval_raw is not None else 1.0
             ci_lo = _scalar_ci(result.get("ci_lower"), eff, se, -1.96)
             ci_hi = _scalar_ci(result.get("ci_upper"), eff, se, +1.96)
             with thinking("writing verdict…"):
@@ -552,7 +552,7 @@ class Coordinator:
         if self.s.model_key not in T.FORECAST_RUNNERS:
             eff2  = result.get("treatment_effect", result.get("slope", result.get("effect", 0))) or 0
             se2   = result.get("se", 0) or 0
-            pval2 = result.get("pvalue", result.get("p_value", 1)) or 1
+            pval2_raw = result.get("pvalue", result.get("p_value", None)); pval2 = float(pval2_raw) if pval2_raw is not None else 1.0
             ci_lo2 = _scalar_ci(result.get("ci_lower"), eff2, se2, -1.96)
             ci_hi2 = _scalar_ci(result.get("ci_upper"), eff2, se2, +1.96)
             r2_2  = result.get("r_squared", 0) or 0
@@ -610,7 +610,7 @@ class Coordinator:
             comparison_rows = []
             primary_t = intent.get("treatment", "")
             primary_eff = result.get("treatment_effect", result.get("slope", result.get("effect", 0))) or 0
-            primary_p = result.get("pvalue", result.get("p_value", 1)) or 1
+            primary_p_raw = result.get("pvalue", result.get("p_value", None)); primary_p = float(primary_p_raw) if primary_p_raw is not None else 1.0
             primary_r2 = result.get("r_squared", 0) or 0
             comparison_rows.append((primary_t, primary_eff, primary_p, primary_r2))
 
@@ -626,7 +626,7 @@ class Coordinator:
                         extra_result = T.run_model(extra_sel["model_key"], self.s.df, extra_intent)
                         if "error" not in extra_result:
                             e_eff = extra_result.get("treatment_effect", extra_result.get("slope", extra_result.get("effect", 0))) or 0
-                            e_p = extra_result.get("pvalue", extra_result.get("p_value", 1)) or 1
+                            e_p_raw = extra_result.get("pvalue", extra_result.get("p_value", None)); e_p = float(e_p_raw) if e_p_raw is not None else 1.0
                             e_r2 = extra_result.get("r_squared", 0) or 0
                             comparison_rows.append((extra_t, e_eff, e_p, e_r2))
                 except Exception:
@@ -734,8 +734,11 @@ def _result_preview(model_key: str, result: dict) -> str:
             return f"next={fc[0]:.4f} ({len(fc)} periods, RMSE={result.get('rmse', 0):.3f})"
         return "no forecast"
     eff = result.get("treatment_effect", result.get("slope", result.get("effect", 0))) or 0
-    p = result.get("pvalue", result.get("p_value", 1)) or 1
-    return f"effect={eff:.4f}, p={p:.3f}, R²={result.get('r_squared', 0):.3f}"
+    p_raw = result.get("pvalue", result.get("p_value", None))
+    p = float(p_raw) if p_raw is not None else 1.0
+    r2 = result.get('r_squared', 0) or 0
+    p_disp = f"{p:.2e}" if p < 0.001 else f"{p:.3f}"
+    return f"effect={eff:.4f}, p={p_disp}, R²={r2:.4f}"
 
 
 def _infer_time_range(df: pd.DataFrame, time_col: Optional[str]) -> str:

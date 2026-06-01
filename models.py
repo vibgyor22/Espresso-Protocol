@@ -122,7 +122,7 @@ def _linear_regression_result(model, y, X, main_index=1, se_type='HC1 robust',
     se = np.sqrt(np.clip(np.diag(vcov), 0, None))
     dof = max(n - k, 1)
     t_stats = np.divide(beta, se, out=np.zeros_like(beta), where=se > 0)
-    pvalues = 2 * (1 - stats.t.cdf(np.abs(t_stats), df=dof))
+    pvalues = 2 * (stats.t.sf(np.abs(t_stats), df=dof))
 
     effect = float(beta[main_index])
     effect_se = float(se[main_index])
@@ -594,7 +594,7 @@ def _twfe_core(data, outcome_col, treatment_col, time_col, unit_col, model_label
     # t-distribution with G-1 df (Cameron & Miller 2015)
     dof = n_units - 1
     t_stat = treatment_effect / treatment_se if treatment_se > 0 else 0.0
-    pvalue = float(2 * (1 - stats.t.cdf(abs(t_stat), df=dof)))
+    pvalue = float(2 * (stats.t.sf(abs(t_stat), df=dof)))
 
     t_crit = float(stats.t.ppf(0.975, df=dof))
     ci_lower = treatment_effect - t_crit * treatment_se
@@ -695,7 +695,7 @@ def run_ols(data, outcome_col, treatment_col):
         se = np.sqrt(np.clip(np.diag(vcov_hc1), 0, None))
 
         t_stats = beta / se
-        pvalues = 2 * (1 - stats.t.cdf(np.abs(t_stats), df=n - k))
+        pvalues = 2 * (stats.t.sf(np.abs(t_stats), df=n - k))
 
         slope = float(beta[1])
         slope_se = float(se[1])
@@ -824,7 +824,7 @@ def run_polynomial_ols(data, outcome_col, treatment_col, degree=2):
         marginal_se = float(np.sqrt(max(gradient @ vcov @ gradient, 0.0)))
         dof = max(n - X.shape[1], 1)
         t_stat = marginal / marginal_se if marginal_se > 0 else 0.0
-        pvalue = float(2 * (1 - stats.t.cdf(abs(t_stat), df=dof)))
+        pvalue = float(2 * (stats.t.sf(abs(t_stat), df=dof)))
         t_crit = float(stats.t.ppf(0.975, df=dof))
 
         base.update({
@@ -881,7 +881,7 @@ def run_median_quantile(data, outcome_col, treatment_col):
         slope_se = float(se[1]) if len(se) > 1 else 0.0
         dof = max(n - X.shape[1], 1)
         t_stat = slope / slope_se if slope_se > 0 else 0.0
-        pvalue = float(2 * (1 - stats.t.cdf(abs(t_stat), df=dof)))
+        pvalue = float(2 * (stats.t.sf(abs(t_stat), df=dof)))
         t_crit = float(stats.t.ppf(0.975, df=dof))
         pseudo_r1 = 1 - (np.sum(np.abs(residuals)) / np.sum(np.abs(y - np.median(y))))
 
@@ -937,7 +937,7 @@ def run_entity_fixed_effects(data, outcome_col, treatment_col, unit_col):
         effect_se = float(se[0])
         dof = n_units - 1
         t_stat = effect / effect_se if effect_se > 0 else 0.0
-        pvalue = float(2 * (1 - stats.t.cdf(abs(t_stat), df=dof)))
+        pvalue = float(2 * (stats.t.sf(abs(t_stat), df=dof)))
         t_crit = float(stats.t.ppf(0.975, df=dof))
         tss = float(np.sum((y - np.mean(y)) ** 2))
         rss = float(np.sum(residuals ** 2))
